@@ -1,8 +1,13 @@
 /** @jsx h */
 import {Component, ComponentChild, h} from "preact";
 
-export class ClientRenderRoot extends Component {
+interface Props {
+    id?: string;
+}
+
+export class ClientRenderRoot extends Component<Props> {
     render(): ComponentChild {
-        return <div id="root"/>;
+        const {id} = this.props;
+        return <div id={id || "root"}/>;
     }
 }
