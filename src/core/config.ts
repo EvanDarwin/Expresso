@@ -1,19 +1,8 @@
 import debug from "debug";
 import {config as configEnv} from "dotenv";
+import {ConfigKeys, EnvConfigData, ExpressoConfiguration} from "../types";
 import {strEntropy} from "../ext/entropy";
 
-export interface ExpressoConfiguration<CK = ConfigKeys> {
-    __secret: Map<CK, string | boolean | number | undefined>;
-}
-
-export interface EnvConfigData<T = unknown> {
-    required?: boolean;
-    default?: string | number | boolean;
-    filter?: (value: unknown) => T | undefined;
-    verify?: (value: T | unknown) => void | never;
-}
-
-export type ConfigKeys = 'APP_SECRET' | 'APP_ENV' | 'APP_DEBUG';
 export type ConfigSetDataSimple = { [key: string]: EnvConfigData };
 export const DefaultConfigSet: { [K in ConfigKeys]: EnvConfigData } = {
     APP_SECRET: <EnvConfigData<string>>{
