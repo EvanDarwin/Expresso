@@ -24,7 +24,6 @@ lint:
 
 audit:
   stage: test
-  needs: [ lint ]
   script:
     - npx gitlab-ci-yarn-audit-parser
   artifacts:
