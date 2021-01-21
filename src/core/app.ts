@@ -35,7 +35,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
             value: (...args: Parameters<ExpressoRouteBindFn>) => {
                 const builtArgs: Parameters<ExpressoRouteBindFn> = [...args];
                 console.dir(builtArgs)
-                _oldFn(...args);
+                _oldFn.call(app, ...args);
             }
         })
     }
