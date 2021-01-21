@@ -1,6 +1,6 @@
 import {json as jsonMiddleware, raw, urlencoded} from "body-parser";
 import express, {RequestHandler} from "express";
-import helmetBase from "helmet";
+import {default as helmetBase} from "helmet";
 import {ServeStaticOptions} from "serve-static";
 
 type HelmetOptions = Parameters<typeof helmetBase>[0]
