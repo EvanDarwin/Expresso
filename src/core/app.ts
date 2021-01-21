@@ -1,9 +1,12 @@
 import debug from "debug";
-import express from "express";
-import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";
+import express, {Express} from "express";
+import {IRouterMatcher} from "express-serve-static-core";
 import {readConfiguration} from ".";
+import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";
 
 export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoOptions<E> = {}): Expresso<EK> {
+    const log = debug('expresso:app')
+    log('creating app')
     const config = readConfiguration<EK>(options.env || {});
     const app = express();
 
@@ -16,11 +19,27 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
             return config.__secret.get(key) || defaultValue;
         } as ExpressoEnv<EK>
     })
+
     Object.defineProperty(app, 'debug', {
         get() {
             return !!+((<Expresso>app).env('APP_DEBUG', 0) || '0')
         }
     })
+
+    // wrap .get()/.post()/.patch()/.delete()/.put() methods
+    const methodNames: (keyof Express)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
+    for (const methodName of methodNames) {
+        const _oldFn = (<Expresso>app)[<keyof Express>methodName];
+        type ExpressoRouteBindFn = ((name: string) => any) & IRouterMatcher<Expresso>
+        Object.defineProperty(app, methodName, {
+            value: (...args: Parameters<ExpressoRouteBindFn>) => {
+                const builtArgs: Parameters<ExpressoRouteBindFn> = [...args];
+                console.dir(builtArgs)
+                _oldFn(...args);
+            }
+        })
+    }
+    log('patch finished')
 
     /** Logger, only loaded in dev mode or if `DEBUG` is defined, for performance reasons */
     if ((<Expresso<EK>>app).debug || (process.env['DEBUG'] || '').length > 0) {
@@ -32,6 +51,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
             log(`<- HTTP/${req.httpVersion} ${req.method} ${req.path} - ${res.statusCode}`)
         })
     }
+    log('middleware ready')
 
     return <Expresso<EK>>app;
 }
