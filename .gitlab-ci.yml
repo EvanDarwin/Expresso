@@ -1,0 +1,37 @@
+image: node:latest
+
+stages:
+  - test
+  - build
+
+cache:
+  paths:
+    - node_modules/
+    - .yarn
+    - build
+    - tsconfig.tsbuildinfo
+
+lint:
+  stage: test
+  script:
+    - yarn --frozen-lockfile
+    - yarn lint --format gitlab
+  artifacts:
+    paths:
+      - gl-codequality.json
+    reports:
+      codequality: gl-codequality.json
+
+audit:
+  stage: test
+  needs: [ lint ]
+  script:
+    - npx gitlab-ci-yarn-audit-parser
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
+
+test:
+  stage: build
+  script:
+    - yarn
