@@ -11,8 +11,12 @@ cache:
     - build
     - tsconfig.tsbuildinfo
 
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
+
 lint:
   stage: test
+  allow_failure: true
   script:
     - yarn --frozen-lockfile
     - yarn lint --format gitlab
