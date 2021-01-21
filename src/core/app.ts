@@ -1,5 +1,6 @@
 import debug from "debug";
-import express, {Express} from "express";
+import * as express from "express";
+import {Express} from "express";
 import {IRouterMatcher} from "express-serve-static-core";
 import {readConfiguration} from ".";
 import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";

@@ -1,4 +1,4 @@
-import minimist from "minimist";
+import * as minimist from "minimist";
 import {testConnections} from "./lib";
 
 const argv = minimist(process.argv.slice(2))
