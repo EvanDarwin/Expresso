@@ -33,7 +33,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
 
     /** Custom express app bindings */
     Object.defineProperty(app, 'env', {
-        value: function <R>(key: EK, defaultValue?: any) {
+        value: function <D>(key: EK, defaultValue?: D) {
             return config.__secret.get(key) || defaultValue;
         } as ExpressoEnv<EK>
     })
@@ -57,9 +57,12 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     return <Expresso<EK>>app;
 }
 
+// noinspection JSUnusedGlobalSymbols
 export const middleware = {
     parsers: {json: jsonMiddleware, raw, urlencoded},
-    helmet: (opts?: object): RequestHandler => {
+
+    // TODO: Helmet types
+    helmet: (opts?: Record<string, unknown>): RequestHandler => {
         return helmetBase(opts)
     },
 
@@ -117,7 +120,7 @@ export async function connect(opt?: string | ConnectionOptions): Promise<Connect
  * @param {D}               context     The context to provide to the renderer
  * @returns {string}        The rendered Preact DOM
  */
-export function renderJSX<D = {}>(jsx: VNode, context?: D): string {
+export function renderJSX<D = Record<string, unknown>>(jsx: VNode, context?: D): string {
     const log = debug('expresso:render:jsx')
     log('start')
     const dom = _renderJSX(jsx, context);
@@ -152,7 +155,7 @@ export function json(res: Response, data: unknown): void {
     res.json(data);
 }
 
-export function document<D = {}>(res: Response, jsx: VNode, data?: D, doctype: HTMLDocType | string = HTMLDocType.HTML5): void {
+export function document<D = Record<string, unknown>>(res: Response, jsx: VNode, data?: D, doctype: HTMLDocType | string = HTMLDocType.HTML5): void {
     res.send(doctype + renderJSX(jsx, data))
 }
 

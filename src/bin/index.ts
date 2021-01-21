@@ -1,7 +1,7 @@
 import minimist from "minimist";
 import {testConnections} from "./lib";
 
-let argv = minimist(process.argv.slice(2))
+const argv = minimist(process.argv.slice(2))
 const [subcommand] = argv._
 
 function help(): never {

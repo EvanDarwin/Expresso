@@ -66,6 +66,6 @@ const calcCharsetLengthWith = (charsets: typeof stdCharsets) =>
  * @param   {string} str    the password string.
  * @returns {number}        the calculated entropy.
  */
-export function strEntropy(str: string) {
+export function strEntropy(str: string): number {
     return str ? calcEntropy(calcCharsetLengthWith(stdCharsets)(str), str.length) : 0
 }
