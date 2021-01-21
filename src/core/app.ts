@@ -30,11 +30,35 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     const methodNames: (keyof Express)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
         const _oldFn = (<Expresso>app)[<keyof Express>methodName];
+
         type ExpressoRouteBindFn = ((name: string) => any) & IRouterMatcher<Expresso>
+        type ExpressoRouteBindFnParams = Parameters<ExpressoRouteBindFn>;
+        /**
+         * F = Generic anonyomus function
+         * A = Parameter types of provided function
+         * W = Resolved anonymous function with injected parameter types
+         */
+        const wrapPossiblePromiseFn =
+            <F extends (...args: any) => any, A = Parameters<F>>(fn: F) =>
+                (...args: A[]) => {
+                    const res = fn(...args);
+                    return (res instanceof Promise) ? Promise.resolve(res) : res;
+                }
+
+        type ExpressoVerbFn = typeof app.get | typeof app.post | typeof app.head |
+            typeof app.delete | typeof app.put | typeof app.patch | typeof app.options;
+
         Object.defineProperty(app, methodName, {
-            value: (...args: Parameters<ExpressoRouteBindFn>) => {
-                const builtArgs: Parameters<ExpressoRouteBindFn> = [...args];
-                console.dir(builtArgs)
+            value: (...args: (ExpressoVerbFn | unknown)[]) => {
+                args.map((arg) => {
+                    if (Array.isArray(arg)) {
+                        return arg.map((a) => wrapPossiblePromiseFn<ExpressoVerbFn>(a))
+                    } else if (typeof arg === 'function') {
+                        return wrapPossiblePromiseFn<ExpressoVerbFn>(arg as ExpressoVerbFn)
+                    } else {
+                        return arg;
+                    }
+                });
                 _oldFn.call(app, ...args);
             }
         })
