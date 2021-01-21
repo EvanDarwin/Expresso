@@ -13,6 +13,7 @@ import {DocType, XMLDocType} from "../types";
  */
 export function renderJSX<D = Record<string, unknown>>(jsx: VNode, context?: D): string {
     const log = debug('expresso:render:jsx')
+    log.color = "35"
     log('start')
     const dom = _renderJSX(jsx, context);
     log('rendered JSX')
@@ -21,6 +22,7 @@ export function renderJSX<D = Record<string, unknown>>(jsx: VNode, context?: D):
 
 export function renderXML(xml: JSXNode, xmlDoctype: DocType = XMLDocType.XML_UTF8): string {
     const log = debug('expresso:render:xml')
+    log.color = "34"
     log('start')
     const dom = _renderXML(xml, {doctype: xmlDoctype})
     log('rendered XML')
