@@ -1,7 +1,7 @@
 import debug from "debug";
 import {JSXNode, render as _renderXML} from "jsx-xml";
 import {VNode} from "preact";
-import _renderJSX from "preact-render-to-string";
+import {default as _renderJSX} from "preact-render-to-string";
 import {DocType, XMLDocType} from "../types";
 
 /**
