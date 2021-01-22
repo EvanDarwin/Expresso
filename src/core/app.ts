@@ -1,8 +1,28 @@
+import * as ansiColors from "ansi-colors";
 import debug from "debug";
 import * as express from "express";
-import {Express, NextFunction} from "express";
+import {Express, RequestHandler} from "express";
+import {IRouterMatcher} from "express-serve-static-core"
 import {readConfiguration} from ".";
 import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";
+
+/**
+ * Express verb functions have the following format:
+ *      verb(name: string, ...middleware?, fn: RequestHandler)
+ *
+ * To get the function to wrap, we replace the last value (assuming it's a function)
+ *
+ * F = Generic anonymous function
+ * TF = Typed anonymous function
+ */
+const wrapPossiblePromiseFn = (app: Express, fn: RequestHandler): RequestHandler =>
+    (req, res, next) => {
+        Promise.resolve(fn(req, res, next)).catch(e => {
+            // get the next method
+            if ((<Expresso>app).debug) console.error(e)
+            next(e)
+        })
+    }
 
 export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoOptions<E> = {}): Expresso<EK> {
     const log = debug('expresso:app')
@@ -30,42 +50,12 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     const methodNames: (keyof Express)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
         const _oldFn = (<Expresso>app)[<keyof Express>methodName];
-
-        /**
-         * F = Generic anonymous function
-         * TF = Typed anonymous function
-         */
-        const wrapPossiblePromiseFn =
-            // eslint-disable-next-line
-            <F extends (...args: any) => any, TF = (...args: Parameters<F>[]) => any>(fn: F): (...args: Parameters<F>) => Promise<any> =>
-                (...args: Parameters<F>[]) => {
-                    console.log('wrapper called')
-                    return Promise.resolve(fn(...args)).catch(e => {
-                        // get the next method
-                        const nextFn = args.slice(-1, 1) as unknown as NextFunction
-                        console.dir(nextFn)
-                        if ((<Expresso>app).debug) console.error(e)
-                        nextFn(e)
-                        // TODO: Determine if we want to keep this
-                        process.exit(1);
-                    })
-                }
-
-        type ExpressoVerbFn = typeof app.get | typeof app.post | typeof app.head |
-            typeof app.delete | typeof app.put | typeof app.patch | typeof app.options;
-
         Object.defineProperty(app, methodName, {
-            value: (...args: (ExpressoVerbFn | unknown)[]) => {
-                args.map((arg) => {
-                    if (Array.isArray(arg)) {
-                        return arg.map((a) => wrapPossiblePromiseFn<ExpressoVerbFn>(a))
-                    } else if (typeof arg === 'function') {
-                        return wrapPossiblePromiseFn<ExpressoVerbFn>(arg as ExpressoVerbFn)
-                    } else {
-                        return arg;
-                    }
-                });
-                _oldFn.call(app, ...args);
+            value: (...args: Parameters<IRouterMatcher<Expresso>>) => {
+                _oldFn.call(app, ...[
+                    ...args.slice(0, args.length - 1),
+                    wrapPossiblePromiseFn(app, args[args.length - 1] as RequestHandler)
+                ]);
             }
         })
     }
@@ -76,9 +66,19 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         const log = debug('expresso:http')
         log.color = "36"
         app.use((req, res, next) => {
-            log(`-> HTTP/${req.httpVersion} ${req.method} ${req.path}`)
+            log(`-> ${req.method} ${req.path}`)
+            res.on('finish', () => {
+                let codeColored = res.statusCode.toString();
+                if (+codeColored < 300) {
+                    codeColored = ansiColors.green(codeColored)
+                } else if (+codeColored >= 300 && +codeColored < 400) {
+                    codeColored = ansiColors.blue(codeColored)
+                } else {
+                    codeColored = ansiColors.red(codeColored)
+                }
+                log(`<- ${req.method} ${req.path} - ${codeColored}`)
+            })
             next()
-            log(`<- HTTP/${req.httpVersion} ${req.method} ${req.path} - ${res.statusCode}`)
         })
     }
     log('middleware ready')
