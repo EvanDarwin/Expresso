@@ -1,7 +1,6 @@
 import debug from "debug";
 import * as express from "express";
-import {Express} from "express";
-import {IRouterMatcher} from "express-serve-static-core";
+import {Express, NextFunction} from "express";
 import {readConfiguration} from ".";
 import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";
 
@@ -32,18 +31,27 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     for (const methodName of methodNames) {
         const _oldFn = (<Expresso>app)[<keyof Express>methodName];
 
-        type ExpressoRouteBindFn = ((name: string) => any) & IRouterMatcher<Expresso>
-        type ExpressoRouteBindFnParams = Parameters<ExpressoRouteBindFn>;
         /**
-         * F = Generic anonyomus function
-         * A = Parameter types of provided function
-         * W = Resolved anonymous function with injected parameter types
+         * F = Generic anonymous function
+         * TF = Typed anonymous function
          */
         const wrapPossiblePromiseFn =
-            <F extends (...args: any) => any, A = Parameters<F>>(fn: F) =>
-                (...args: A[]) => {
-                    const res = fn(...args);
-                    return (res instanceof Promise) ? Promise.resolve(res) : res;
+            // eslint-disable-next-line
+            <F extends (...args: any) => any, TF = (...args: Parameters<F>[]) => any>(fn: F): (...args: Parameters<F>) => any | Promise<any> =>
+                (...args: Parameters<F>[]) => {
+                    let res = fn(...args);
+                    try {
+                        if (res instanceof Promise) res = Promise.resolve(res)
+                        return res;
+                    } catch (e) {
+                        // get the next method
+                        const nextFn = args.slice(-1, 1) as unknown as NextFunction
+                        console.dir(nextFn)
+                        if ((<Expresso>app).debug) console.error(e)
+                        nextFn(e)
+                        // TODO: Determine if we want to keep this
+                        process.exit(1);
+                    }
                 }
 
         type ExpressoVerbFn = typeof app.get | typeof app.post | typeof app.head |
