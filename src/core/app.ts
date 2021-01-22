@@ -39,11 +39,8 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
             // eslint-disable-next-line
             <F extends (...args: any) => any, TF = (...args: Parameters<F>[]) => any>(fn: F): (...args: Parameters<F>) => Promise<any> =>
                 (...args: Parameters<F>[]) => {
-                    return new Promise((res, rej) => {
-                        Promise.resolve(fn(...args))
-                            .then(r => res(r))
-                            .catch(e => rej(e));
-                    }).catch(e => {
+                    console.log('wrapper called')
+                    return Promise.resolve(fn(...args)).catch(e => {
                         // get the next method
                         const nextFn = args.slice(-1, 1) as unknown as NextFunction
                         console.dir(nextFn)
