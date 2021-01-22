@@ -37,14 +37,13 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
          */
         const wrapPossiblePromiseFn =
             // eslint-disable-next-line
-            <F extends (...args: any) => any, TF = (...args: Parameters<F>[]) => any>(fn: F): (...args: Parameters<F>) => any | Promise<any> =>
+            <F extends (...args: any) => any, TF = (...args: Parameters<F>[]) => any>(fn: F): (...args: Parameters<F>) => Promise<any> =>
                 (...args: Parameters<F>[]) => {
-                    try {
-                        const res = Promise.resolve(fn(...args)).catch(e => e);
-                        console.dir({res})
-                        if (res instanceof Error) throw res;
-                        return res;
-                    } catch (e) {
+                    return new Promise((res, rej) => {
+                        Promise.resolve(fn(...args))
+                            .then(r => res(r))
+                            .catch(e => rej(e));
+                    }).catch(e => {
                         // get the next method
                         const nextFn = args.slice(-1, 1) as unknown as NextFunction
                         console.dir(nextFn)
@@ -52,7 +51,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
                         nextFn(e)
                         // TODO: Determine if we want to keep this
                         process.exit(1);
-                    }
+                    })
                 }
 
         type ExpressoVerbFn = typeof app.get | typeof app.post | typeof app.head |
