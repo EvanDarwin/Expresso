@@ -39,13 +39,9 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
             // eslint-disable-next-line
             <F extends (...args: any) => any, TF = (...args: Parameters<F>[]) => any>(fn: F): (...args: Parameters<F>) => any | Promise<any> =>
                 (...args: Parameters<F>[]) => {
-                    let res = fn(...args);
                     try {
-                        if (res instanceof Promise) {
-                            res = Promise.resolve(res).catch(e => {
-                                throw e;
-                            })
-                        }
+                        const res = Promise.resolve(fn(...args)).catch(e => e);
+                        if (res instanceof Error) throw res;
                         return res;
                     } catch (e) {
                         // get the next method
