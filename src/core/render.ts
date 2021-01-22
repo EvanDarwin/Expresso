@@ -1,8 +1,10 @@
 import debug from "debug";
 import {JSXNode, render as _renderXML} from "jsx-xml";
 import {VNode} from "preact";
-import {default as _renderJSX} from "preact-render-to-string";
 import {DocType, XMLDocType} from "../types";
+
+// eslint-disable-next-line
+const _renderJSX = require("preact-render-to-string");
 
 /**
  * Render a TSX Preact DOM into a string
