@@ -41,6 +41,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
                 (...args: Parameters<F>[]) => {
                     try {
                         const res = Promise.resolve(fn(...args)).catch(e => e);
+                        console.dir({res})
                         if (res instanceof Error) throw res;
                         return res;
                     } catch (e) {
