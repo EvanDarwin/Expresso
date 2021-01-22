@@ -4,7 +4,7 @@ import {ErrorRequestHandler, json as jsonMiddleware, raw, RequestHandler, Respon
 import * as helmetBase from "helmet";
 import {h} from "preact";
 import {ServeStaticOptions} from "serve-static";
-import {ServerErrorDefaultPage} from "../preact/ServerErrorDefaultPage";
+import {InternalErrorDefaultErrorPage} from "../preact/error/InternalErrorDefaultErrorPage";
 import {Expresso} from "../types";
 import {document} from "./response"
 
@@ -31,7 +31,9 @@ export default {
             const log = debug('expresso:error')
             log('begin')
             res.status(500)
-            document(res, <ServerErrorDefaultPage debug={(req.app as Expresso).debug} error={err}/>);
+            document(res, <InternalErrorDefaultErrorPage
+                debug={(req.app as Expresso).debug}
+                error={err} requestAt={(req as any).at as Date}/>);
             log('end')
         }
     },

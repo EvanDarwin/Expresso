@@ -67,6 +67,8 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         log.color = "36"
         app.use((req, res, next) => {
             log(`-> ${req.method} ${req.path}`)
+            // @ts-ignore
+            req.at = new Date();
             res.on('finish', () => {
                 let codeColored = res.statusCode.toString();
                 if (+codeColored < 300) {
