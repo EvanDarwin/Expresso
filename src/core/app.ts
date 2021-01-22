@@ -41,7 +41,11 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
                 (...args: Parameters<F>[]) => {
                     let res = fn(...args);
                     try {
-                        if (res instanceof Promise) res = Promise.resolve(res)
+                        if (res instanceof Promise) {
+                            res = Promise.resolve(res).catch(e => {
+                                throw e;
+                            })
+                        }
                         return res;
                     } catch (e) {
                         // get the next method
