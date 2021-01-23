@@ -160,6 +160,7 @@ export interface ExpressoRequest<P = core.ParamsDictionary, ResBody = any, ReqBo
     currentMs: number;
     app: ExpressoApplication;
     uuid: string;
+    logger: Logger;
 }
 
 export interface ExpressoResponse<ResBody = any, Locals extends Record<string, any> = Record<string, any>>

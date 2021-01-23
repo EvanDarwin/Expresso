@@ -52,6 +52,12 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         value: new Logger({displayFunctionName: false})
     })
 
+    Object.defineProperty(app.request, 'logger', {
+        get(this: ExpressoRequest): Logger {
+            return this.app.logger;
+        }
+    })
+
     Object.defineProperty(app.request, 'currentMs', {
         get(): number {
             return (+new Date) - +(this as ExpressoRequest).at
