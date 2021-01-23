@@ -17,6 +17,7 @@ import type {Request as CoreRequest, Response as CoreResponse} from "express-ser
 import * as core from "express-serve-static-core";
 import {ParamsDictionary} from "express-serve-static-core";
 import {ParsedQs} from "qs";
+import {Logger} from "tslog";
 import {ConfigKeys, ExpressoEnv} from "./config";
 
 export * from "./config";
@@ -145,6 +146,7 @@ export interface ExpressoApplication extends Express.Application {
     request: ExpressoRequest;
     response: ExpressoResponse;
     debug: boolean;
+    logger: Logger;
     _router: { stack: Layer[] } | any
 }
 
@@ -158,6 +160,7 @@ export interface ExpressoRequest<P = core.ParamsDictionary, ResBody = any, ReqBo
     currentMs: number;
     app: ExpressoApplication;
     uuid: string;
+    logger: Logger;
 }
 
 export interface ExpressoResponse<ResBody = any, Locals extends Record<string, any> = Record<string, any>>
