@@ -134,13 +134,10 @@ export interface Expresso<CK = ConfigKeys> extends ExpressoApplication<CK> {
     debug: boolean;
 }
 
-export interface ExpressoRequest<P = core.ParamsDictionary,
-    ResBody = any,
-    ReqBody = any,
-    ReqQuery = core.Query,
-    Locals extends Record<string, any> = Record<string, any>>
-    extends ExpressServeStaticCore.Request<P, ResBody, ReqBody, ReqQuery, Locals> {
+export interface ExpressoRequest<P = core.ParamsDictionary, ResBody = any, ReqBody = any,
+    ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>> extends ExpressServeStaticCore.Request<P, ResBody, ReqBody, ReqQuery, Locals> {
     at: Date;
+    currentMs: number;
 }
 
 export interface ExpressoResponse<ResBody = any,

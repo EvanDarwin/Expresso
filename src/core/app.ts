@@ -57,6 +57,12 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         }
     })
 
+    Object.defineProperty(app.request, 'currentMs', {
+        get(): number {
+            return (+new Date) - +(this as ExpressoRequest).at
+        }
+    })
+
     // This is now safe, the following changes are remapping existing properties
     const patchedApp = app as unknown as Expresso<EK>;
 
