@@ -41,7 +41,7 @@ export class ErrorPage extends Component<Props> {
             </div>
             {this.props.children}
 
-            <hr/>
+            {req.app.debug && <hr/>}
             <div style={{textAlign: centered ? "center" : "inherit"}}>
                 <p style={{margin: "0.25em 0"}}>expresso{debug ?
                     <span> - <em>{req.currentMs}ms</em></span> : undefined}</p>
