@@ -1,3 +1,13 @@
+/**
+ * == Expresso Framework ==
+ *
+ * This is free software, licensed under the GPL-3.0-or-later license; whose
+ * full text is available in the LICENSE file included with this code. You are
+ * welcome to redistribute and contribute to it under certain conditions.
+ *
+ * @copyright 2021 - Evan Darwin <evan@relta.net>
+ */
+
 import {NextFunction} from "express";
 import type {Request as CoreRequest, Response as CoreResponse} from "express-serve-static-core";
 import * as core from "express-serve-static-core";
