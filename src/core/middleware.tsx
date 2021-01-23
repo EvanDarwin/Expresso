@@ -8,44 +8,52 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
-import debug from "debug";
 import * as express from "express";
-import {ErrorRequestHandler, json as jsonMiddleware, raw, RequestHandler, Response, urlencoded} from "express";
+import {ErrorRequestHandler, json as jsonMiddleware, NextFunction, raw, RequestHandler, urlencoded} from "express";
 import * as helmetBase from "helmet";
 import {h} from "preact";
 import {ServeStaticOptions} from "serve-static";
-import {InternalErrorDefaultErrorPage} from "../preact/error/InternalErrorDefaultErrorPage";
-import {Expresso} from "../types";
-import {document} from "./response"
+import {InternalErrorPage} from "../preact/components/error/InternalErrorPage";
+import {NotFoundErrorPage} from "../preact/components/error/NotFoundErrorPage";
+import {ExpressoRequest, ExpressoResponse} from "../types";
+import {renderJSX} from "./render";
 
 type HelmetOptions = Parameters<typeof helmetBase>[0]
 
 export default {
     parsers: {json: jsonMiddleware, raw, urlencoded},
 
-    error: (fn: (res: Response, err: Error) => string | void): ErrorRequestHandler => {
-        return (err, req, res, next) => {
-            const log = debug('expresso:error')
-            log('begin')
-            res.status(500)
-            const _ret = fn(res, err)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    notFound: (fn?: (req: ExpressoRequest, res: ExpressoResponse) => any): RequestHandler => {
+        // noinspection UnnecessaryLocalVariableJS
+        const expressoNotFound: RequestHandler = (req, res) => {
+            res.status(404)
+            const _ret = !fn
+                ? renderJSX(<NotFoundErrorPage req={req as ExpressoRequest}/>)
+                : fn(req as ExpressoRequest, res as ExpressoResponse)
             if (typeof _ret === 'string') {
                 res.send(_ret)
             }
-            log('end')
         }
+        return expressoNotFound;
     },
 
-    simpleError: (): ErrorRequestHandler => {
-        return (err, req, res, next) => {
-            const log = debug('expresso:error')
-            log('begin')
-            res.status(500)
-            document(res, <InternalErrorDefaultErrorPage
-                debug={(req.app as Expresso).debug}
-                error={err} requestAt={(req as any).at as Date}/>);
-            log('end')
-        }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    error: (fn?: (res: ExpressoResponse, err: Error) => any): ErrorRequestHandler => {
+        // the fourth parameter is required for express to detect it as an error handler
+        // noinspection UnnecessaryLocalVariableJS
+        const expressoError: ErrorRequestHandler =
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            (err: Error, req, res, next: NextFunction) => {
+                res.status(500)
+                const _ret = !fn
+                    ? renderJSX(<InternalErrorPage req={req as ExpressoRequest} error={err}/>)
+                    : fn(res as ExpressoResponse, err)
+                if (typeof _ret === 'string') {
+                    res.send(_ret)
+                }
+            }
+        return expressoError;
     },
 
     /**
