@@ -34,7 +34,7 @@ export class InternalErrorPage extends Component<Props> {
                 method && <span>&nbsp;<u>{method.trim()}</u></span>} (<em>{path?.trim()}</em>)</span>
         })
         return <ErrorPage
-            req={req} statusCode={500}
+            req={req} statusCode={req.statusCode || 500}
             statusMessage={"Internal Server Error"}
             subtitle="An error occurred while processing your request"
             centered>{req.app.debug && <div>

@@ -8,15 +8,12 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
-import {NextFunction, RequestHandler} from "express";
+import {RequestHandler} from "express";
+import {Expresso} from "../types";
 
-export function asyncHandler(fn: RequestHandler): RequestHandler {
-    return (...args: Parameters<RequestHandler>) => {
-        const ret = fn(...args)
-        const next: NextFunction | undefined = args.slice(-1, 1) as unknown as NextFunction
-        if (!next) {
-            throw new Error("Internal error, 'next' function not found")
-        }
-        return Promise.resolve(ret).catch(next)
+/** Automatically handle asynchronous functions in express handlers */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const asyncHandler = (app: Expresso<any>, fn: RequestHandler): RequestHandler =>
+    (req, res, next) => {
+        Promise.resolve(fn(req, res, next)).catch(e => next(e))
     }
-}

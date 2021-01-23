@@ -35,7 +35,7 @@ export class ErrorPage extends Component<Props> {
             `}`}</style>
 
             <div style={{textAlign: centered ? "center" : "inherit"}}>
-                <h1 style={{marginBottom: '0.25rem'}}>{status} - {statusMessage}</h1>
+                <h1 style={{marginBottom: '0.5rem'}}>{status} - {statusMessage}</h1>
                 {subtitle ? <h3 style={{marginTop: 0}}>An error occurred while processing your request</h3> : undefined}
                 <hr/>
             </div>

@@ -10,21 +10,20 @@
 
 import * as ansiColors from "ansi-colors";
 import debug from "debug";
+import type {Express, RequestHandler} from "express";
 import * as express from "express";
-import {Application, Express, RequestHandler} from "express";
-import {IRouterMatcher} from "express-serve-static-core"
+import type {IRouterMatcher} from "express-serve-static-core"
 import {Logger} from "tslog";
 import {v4 as uuidv4} from "uuid";
 import {readConfiguration, renderJSX, renderXML} from ".";
-import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions, ExpressoRequest} from "../types";
+import type {ConfigKeys, Expresso, ExpressoApplication, ExpressoEnv, ExpressoOptions, ExpressoRequest} from "../types";
+import {asyncHandler} from "./async";
 
-/** Automatically handle asynchronous functions in express handlers */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const asyncHandler = (app: Expresso<any>, fn: RequestHandler): RequestHandler =>
-    (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(e => next(e))
-    }
-
+/**
+ * Construct a new expresso framework application
+ * @param {ExpressoOptions<E>} options
+ * @returns {Expresso<EK>}
+ */
 export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoOptions<E> = {}): Expresso<EK> {
     const log = debug('expresso:app')
     log('creating app')
@@ -68,7 +67,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     const patchedApp = app as unknown as Expresso<EK>;
 
     // wrap verb methods with async support
-    const methodNames: (keyof Application)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
+    const methodNames: (keyof ExpressoApplication)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
         const _oldFn = app[<keyof Express>methodName];
         Object.defineProperty(patchedApp, methodName, {
