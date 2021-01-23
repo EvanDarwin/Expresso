@@ -21,7 +21,26 @@ import {renderJSX} from "./render";
 type HelmetOptions = Parameters<typeof helmetBase>[0]
 
 export default {
-    parsers: {json: jsonMiddleware, raw, urlencoded},
+    /** Common express request parsers */
+    parsers: {
+        /**
+         * JSON data parser
+         * @see express.json
+         */
+        json: jsonMiddleware,
+
+        /**
+         * Raw data parser
+         * @see express.raw
+         */
+        raw,
+
+        /**
+         * URL encoded data parser
+         * @see express.urlencoded
+         */
+        urlencoded
+    },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     notFound: (fn?: (req: ExpressoRequest, res: ExpressoResponse) => any): RequestHandler => {
