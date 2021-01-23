@@ -48,7 +48,9 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         }
     })
 
-    Object.defineProperty(app, 'logger', {value: new Logger()})
+    Object.defineProperty(app, 'logger', {
+        value: new Logger({displayFunctionName: false})
+    })
 
     Object.defineProperty(app.request, 'currentMs', {
         get(): number {

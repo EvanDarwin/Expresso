@@ -49,7 +49,7 @@ export async function connect(opt?: string | ConnectionOptions): Promise<Connect
         log('connected')
         return c;
     }).catch((e) => {
-        (new Logger).error(e)
+        (new Logger({displayFunctionName: false})).error(e)
         process.exit(1);
     });
 }
