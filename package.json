@@ -1,7 +1,7 @@
 {
   "name": "expresso",
   "version": "0.1.0",
-  "description": "",
+  "description": "A modern express framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -12,9 +12,9 @@
   "bin": {
     "expresso": "./dist/bin/index.js"
   },
-  "keywords": [],
+  "keywords": ["expresso", "express", "framework"],
   "author": "Evan Darwin <evan@relta.net>",
-  "license": "ISC",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "@types/debug": "^4.1.5",
     "@types/minimist": "^1.2.1",

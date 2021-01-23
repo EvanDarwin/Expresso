@@ -1,6 +1,15 @@
 /**
- * Credit to gabmontes:
- * https://github.com/autonomoussoftware/fast-password-entropy/blob/master/src/index.js
+ * @copyright Autonomous Software
+ * @copyright Evan Darwin <evan@relta.net>
+ *
+ * This source code was originally from gabmontes' fast-password-entropy,
+ * licensed under the MIT license. It has been modified for TypeScript.
+ *
+ * The project can be found here:
+ *   https://github.com/autonomoussoftware/fast-password-entropy
+ *
+ * The source is available here:
+ *   https://github.com/autonomoussoftware/fast-password-entropy/blob/master/src/index.js
  */
 
 /**
