@@ -29,14 +29,25 @@ lint:
 audit:
   stage: test
   script:
-  - npx gitlab-ci-yarn-audit-parser
+    - npx gitlab-ci-yarn-audit-parser
   artifacts:
     reports:
       dependency_scanning: gl-dependency-scanning-report.json
-test:
+build-node-12:
   stage: build
+  image: node:12
   script:
-  - yarn
+    - yarn
+build-node-13:
+  stage: build
+  image: node:13
+  script:
+    - yarn
+build-node-14:
+  stage: build
+  image: node:14
+  script:
+    - yarn
 sast:
   variables:
     SAST_EXCLUDED_ANALYZERS: bandit, brakeman, flawfinder, gosec, kubesec, phpcs-security-audit,

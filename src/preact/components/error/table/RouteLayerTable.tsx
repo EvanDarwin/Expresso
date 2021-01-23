@@ -34,9 +34,8 @@ export class RouteLayerTable extends Component<Props> {
                         <small style={{textIndent: '.5em', display: 'block'}}>{`${layer.regexp}`}</small>
                     </td>
                     <td>{layer.route?.stack.length}</td>
-                    <td>{Object.entries(layer.route?.methods as { [key: string]: boolean })
-                        .filter(([, v]) => v)
-                        .map(([k]) => k.toUpperCase())}</td>
+                    <td style={{maxWidth: 300}}>{Object.entries(layer.route?.methods as { [key: string]: boolean })
+                        .filter(([, v]) => v).map(([k]) => k.toUpperCase()).join(", ")}</td>
                 </tr>
             )}
             </tbody>

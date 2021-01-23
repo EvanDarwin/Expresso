@@ -12,13 +12,13 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
-import {NextFunction} from "express";
-import type {Request as CoreRequest, Response as CoreResponse} from "express-serve-static-core";
+import type {NextFunction, Request as BaseRequest, Response as BaseResponse} from "express";
+import type {ParamsDictionary} from "express-serve-static-core";
 import * as core from "express-serve-static-core";
-import {ParamsDictionary} from "express-serve-static-core";
-import {ParsedQs} from "qs";
+import * as http from "http";
+import type {ParsedQs} from "qs";
 import {Logger} from "tslog";
-import {ConfigKeys, ExpressoEnv} from "./config";
+import type {ConfigKeys, ExpressoEnv} from "./config";
 
 export * from "./config";
 export * from "./doctype";
@@ -34,22 +34,11 @@ declare namespace Express {
             req: ExpressoRequest<P, ResBody, ReqBody, ReqQuery, Locals>,
             res: ExpressoResponse<ResBody, Locals>,
             next: NextFunction,
-        ): void;
+        ): void | Promise<void>;
     }
 
-    export type ErrorRequestHandler<P = ParamsDictionary,
-        ResBody = any,
-        ReqBody = any,
-        ReqQuery = ParsedQs,
-        Locals extends Record<string, any> = Record<string, any>> = (
-        err: any,
-        req: ExpressoRequest<P, ResBody, ReqBody, ReqQuery, Locals>,
-        res: ExpressoResponse<ResBody, Locals>,
-        next: NextFunction,
-    ) => void;
-
     export interface IRouterMatcher<T,
-        Method extends 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' = any> {
+        Method extends 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' = any> extends core.IRouterMatcher<T, Method> {
         <P = ParamsDictionary,
             ResBody = any,
             ReqBody = any,
@@ -57,7 +46,7 @@ declare namespace Express {
             Locals extends Record<string, any> = Record<string, any>>(
             path: core.PathParams,
             // tslint:disable-next-line no-unnecessary-generics (This generic is meant to be passed explicitly.)
-            ...handlers: Array<RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>
+            ...handlers: Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>
         ): T;
 
         <P = ParamsDictionary,
@@ -67,10 +56,10 @@ declare namespace Express {
             Locals extends Record<string, any> = Record<string, any>>(
             path: core.PathParams,
             // tslint:disable-next-line no-unnecessary-generics (This generic is meant to be passed explicitly.)
-            ...handlers: Array<core.RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, Locals>>
+            ...handlers: Array<Express.RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, Locals>>
         ): T;
 
-        (path: core.PathParams, subApplication: ExpressoApplication): T;
+        (path: core.PathParams, subApplication: ExpressoApplication): T | Promise<T>;
     }
 
     export type RequestHandlerParams<P = ParamsDictionary,
@@ -78,41 +67,30 @@ declare namespace Express {
         ReqBody = any,
         ReqQuery = ParsedQs,
         Locals extends Record<string, any> = Record<string, any>> =
-        | RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
-        | ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
-        | Array<RequestHandler<P> | ErrorRequestHandler<P>>;
-
-    // noinspection JSUnusedGlobalSymbols
-    export interface IRouterHandler<T> {
-        (...handlers: RequestHandler[]): T;
-
-        (...handlers: core.RequestHandlerParams[]): T;
-
-        <P = ParamsDictionary,
-            ResBody = any,
-            ReqBody = any,
-            ReqQuery = ParsedQs,
-            Locals extends Record<string, any> = Record<string, any>>(
-            // tslint:disable-next-line no-unnecessary-generics (This generic is meant to be passed explicitly.)
-            ...handlers: Array<RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>
-        ): T;
-
-        <P = ParamsDictionary,
-            ResBody = any,
-            ReqBody = any,
-            ReqQuery = ParsedQs,
-            Locals extends Record<string, any> = Record<string, any>>(
-            // tslint:disable-next-line no-unnecessary-generics (This generic is meant to be passed explicitly.)
-            ...handlers: Array<RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, Locals>>
-        ): T;
-    }
+        | Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
+        | Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>;
 
     export interface Application extends core.Application {
-        get: ((name: string) => any) & IRouterMatcher<this>;
-        post: ((name: string) => any) & IRouterMatcher<this>;
-        put: ((name: string) => any) & IRouterMatcher<this>;
-        delete: ((name: string) => any) & IRouterMatcher<this>;
-        patch: ((name: string) => any) & IRouterMatcher<this>;
+        (req: ExpressoRequest | http.IncomingMessage, res: ExpressoResponse | http.ServerResponse): any;
+
+        request: ExpressoRequest;
+        response: ExpressoResponse;
+        debug: boolean;
+        logger: Logger;
+        _router: { stack: Layer[] } | any
+    }
+
+    export interface Request<P = core.ParamsDictionary, ResBody = any, ReqBody = any,
+        ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>>
+        extends BaseRequest<P, ResBody, ReqBody, ReqQuery, Locals> {
+        at: Date;
+        currentMs: number;
+        app: ExpressoApplication;
+        uuid: string;
+        logger: Logger;
+    }
+
+    export interface Response<ResBody = any, Locals extends Record<string, any> = Record<string, any>> extends BaseResponse<ResBody, Locals> {
     }
 
     export interface RequestHandler<P = ParamsDictionary,
@@ -129,25 +107,14 @@ declare namespace Express {
     }
 }
 
-declare namespace ExpressServeStaticCore {
-    export interface Request<P = core.ParamsDictionary,
-        ResBody = any,
-        ReqBody = any,
-        ReqQuery = core.Query,
-        Locals extends Record<string, any> = Record<string, any>> extends CoreRequest<P, ResBody, ReqBody, ReqQuery, Locals> {
-    }
-
-    export interface Response<ResBody = any,
-        Locals extends Record<string, any> = Record<string, any>> extends CoreResponse<ResBody, Locals> {
-    }
-}
-
 export interface ExpressoApplication extends Express.Application {
-    request: ExpressoRequest;
-    response: ExpressoResponse;
-    debug: boolean;
-    logger: Logger;
-    _router: { stack: Layer[] } | any
+    get: ((name: string) => any) & Express.IRouterMatcher<this>;
+    post: ((name: string) => any) & Express.IRouterMatcher<this>;
+    put: ((name: string) => any) & Express.IRouterMatcher<this>;
+    patch: ((name: string) => any) & Express.IRouterMatcher<this>;
+    delete: ((name: string) => any) & Express.IRouterMatcher<this>;
+    head: ((name: string) => any) & Express.IRouterMatcher<this>;
+    all: ((name: string) => any) & Express.IRouterMatcher<this>;
 }
 
 export interface Expresso<CK = ConfigKeys> extends ExpressoApplication {
@@ -155,16 +122,12 @@ export interface Expresso<CK = ConfigKeys> extends ExpressoApplication {
 }
 
 export interface ExpressoRequest<P = core.ParamsDictionary, ResBody = any, ReqBody = any,
-    ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>> extends ExpressServeStaticCore.Request<P, ResBody, ReqBody, ReqQuery, Locals> {
-    at: Date;
-    currentMs: number;
-    app: ExpressoApplication;
-    uuid: string;
-    logger: Logger;
+    ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>>
+    extends Express.Request<P, ResBody, ReqBody, ReqQuery, Locals> {
 }
 
 export interface ExpressoResponse<ResBody = any, Locals extends Record<string, any> = Record<string, any>>
-    extends ExpressServeStaticCore.Response<ResBody, Locals> {
+    extends Express.Response<ResBody, Locals> {
 }
 
 /**

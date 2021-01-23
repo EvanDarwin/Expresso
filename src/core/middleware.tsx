@@ -45,7 +45,7 @@ export default {
         const expressoError: ErrorRequestHandler =
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             (err: Error, req, res, next: NextFunction) => {
-                res.status(500)
+                if (!res.statusCode || res.statusCode === 200) res.status(500)
                 const _ret = !fn
                     ? renderJSX(<InternalErrorPage req={req as ExpressoRequest} error={err}/>)
                     : fn(res as ExpressoResponse, err)
