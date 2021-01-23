@@ -9,6 +9,7 @@
  */
 
 import debug from "debug";
+import {Logger} from "tslog";
 import {Connection, ConnectionOptions, ConnectionOptionsReader, createConnection} from "typeorm";
 
 /**
@@ -48,6 +49,7 @@ export async function connect(opt?: string | ConnectionOptions): Promise<Connect
         log('connected')
         return c;
     }).catch((e) => {
-        throw e;
+        (new Logger).error(e)
+        process.exit(1);
     });
 }

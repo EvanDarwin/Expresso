@@ -13,6 +13,7 @@ import debug from "debug";
 import * as express from "express";
 import {Application, Express, RequestHandler} from "express";
 import {IRouterMatcher} from "express-serve-static-core"
+import {Logger} from "tslog";
 import {v4 as uuidv4} from "uuid";
 import {readConfiguration, renderJSX, renderXML} from ".";
 import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions, ExpressoRequest} from "../types";
@@ -46,6 +47,8 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
             return !!+((app as unknown as Expresso).env('APP_DEBUG', 0) || '0')
         }
     })
+
+    Object.defineProperty(app, 'logger', {value: new Logger()})
 
     Object.defineProperty(app.request, 'currentMs', {
         get(): number {
