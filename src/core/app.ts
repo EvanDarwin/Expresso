@@ -1,10 +1,10 @@
 import * as ansiColors from "ansi-colors";
 import debug from "debug";
 import * as express from "express";
-import {Express, RequestHandler} from "express";
+import {Application, Express, RequestHandler} from "express";
 import {IRouterMatcher} from "express-serve-static-core"
-import {readConfiguration} from ".";
-import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";
+import {readConfiguration, renderJSX, renderXML} from ".";
+import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions, ExpressoRequest} from "../types";
 
 /**
  * Express verb functions have the following format:
@@ -15,11 +15,11 @@ import {ConfigKeys, Expresso, ExpressoEnv, ExpressoOptions} from "../types";
  * F = Generic anonymous function
  * TF = Typed anonymous function
  */
-const wrapPossiblePromiseFn = (app: Express, fn: RequestHandler): RequestHandler =>
+const wrapPossiblePromiseFn = (app: Expresso<any>, fn: RequestHandler): RequestHandler =>
     (req, res, next) => {
         Promise.resolve(fn(req, res, next)).catch(e => {
             // get the next method
-            if ((<Expresso>app).debug) console.error(e)
+            if (app.debug) console.error(e)
             next(e)
         })
     }
@@ -42,30 +42,52 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
 
     Object.defineProperty(app, 'debug', {
         get() {
-            return !!+((<Expresso>app).env('APP_DEBUG', 0) || '0')
+            // This is unsafe, however env is already defined at this point
+            return !!+((app as unknown as Expresso).env('APP_DEBUG', 0) || '0')
         }
     })
 
-    // wrap .get()/.post()/.patch()/.delete()/.put() methods
-    const methodNames: (keyof Express)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
+    // This is now safe, the following changes are remapping existing properties
+    const patchedApp = app as unknown as Expresso<EK>;
+
+    // wrap verb methods with async support
+    const methodNames: (keyof Application)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
-        const _oldFn = (<Expresso>app)[<keyof Express>methodName];
-        Object.defineProperty(app, methodName, {
+        const _oldFn = app[<keyof Express>methodName];
+        Object.defineProperty(patchedApp, methodName, {
             value: (...args: Parameters<IRouterMatcher<Expresso>>) => {
                 _oldFn.call(app, ...[
                     ...args.slice(0, args.length - 1),
-                    wrapPossiblePromiseFn(app, args[args.length - 1] as RequestHandler)
+                    wrapPossiblePromiseFn(patchedApp, args[args.length - 1] as RequestHandler)
                 ]);
             }
         })
     }
+
+    // wrap send
+    const _send = app.response.send;
+    Object.defineProperty(app.response, 'send', {
+        value: function <ResBody extends any = any>(this: ExpressoRequest, data?: ResBody) {
+            if (typeof data === 'object') {
+                if (data && 'a' in data && Array.isArray((<any>data)['a'])) {
+                    _send.call(this, renderXML(data as any))
+                    return
+                } else if (data && 'props' in data && 'type' in data && typeof (<any>data)['type'] === 'function') {
+                    _send.call(this, renderJSX(data as any));
+                    return
+                }
+            }
+            _send.call(this, data);
+        }
+    })
+
     log('patch finished')
 
     /** Logger, only loaded in dev mode or if `DEBUG` is defined, for performance reasons */
-    if ((<Expresso<EK>>app).debug || (process.env['DEBUG'] || '').length > 0) {
-        const log = debug('expresso:http')
+    if (patchedApp.debug || (process.env['DEBUG'] || '').length > 0) {
+        const log = debug('expresso:http');
         log.color = "36"
-        app.use((req, res, next) => {
+        patchedApp.use((req, res, next) => {
             log(`-> ${req.method} ${req.path}`)
             // @ts-ignore
             req.at = new Date();
@@ -85,5 +107,5 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     }
     log('middleware ready')
 
-    return <Expresso<EK>>app;
+    return patchedApp;
 }
