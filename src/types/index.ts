@@ -37,17 +37,6 @@ declare namespace Express {
         ): void | Promise<void>;
     }
 
-    export type ErrorRequestHandler<P = ParamsDictionary,
-        ResBody = any,
-        ReqBody = any,
-        ReqQuery = ParsedQs,
-        Locals extends Record<string, any> = Record<string, any>> = (
-        err: Error,
-        req: ExpressoRequest<P, ResBody, ReqBody, ReqQuery, Locals>,
-        res: ExpressoResponse<ResBody, Locals>,
-        next: NextFunction,
-    ) => void | Promise<void>;
-
     export interface IRouterMatcher<T,
         Method extends 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' = any> extends core.IRouterMatcher<T, Method> {
         <P = ParamsDictionary,
@@ -81,30 +70,6 @@ declare namespace Express {
         | Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
         | Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>;
 
-    // noinspection JSUnusedGlobalSymbols
-    export interface IRouterHandler<T> {
-        (...handlers: Express.RequestHandler[]): T;
-
-        (...handlers: Express.RequestHandlerParams[]): T;
-
-        <P = ParamsDictionary,
-            ResBody = any,
-            ReqBody = any,
-            ReqQuery = ParsedQs,
-            Locals extends Record<string, any> = Record<string, any>>(
-            // tslint:disable-next-line no-unnecessary-generics (This generic is meant to be passed explicitly.)
-            ...handlers: Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>
-        ): T;
-
-        <P = ParamsDictionary,
-            ResBody = any,
-            ReqBody = any,
-            ReqQuery = ParsedQs,
-            Locals extends Record<string, any> = Record<string, any>>(
-            // tslint:disable-next-line no-unnecessary-generics (This generic is meant to be passed explicitly.)
-            ...handlers: Array<Express.RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, Locals>>
-        ): T;
-    }
     export interface Application extends core.Application {
         (req: ExpressoRequest | http.IncomingMessage, res: ExpressoResponse | http.ServerResponse): any;
 
@@ -113,11 +78,11 @@ declare namespace Express {
         debug: boolean;
         logger: Logger;
         _router: { stack: Layer[] } | any
-
     }
 
     export interface Request<P = core.ParamsDictionary, ResBody = any, ReqBody = any,
-        ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>> extends BaseRequest {
+        ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>>
+        extends BaseRequest<P, ResBody, ReqBody, ReqQuery, Locals> {
         at: Date;
         currentMs: number;
         app: ExpressoApplication;
@@ -150,16 +115,6 @@ export interface ExpressoApplication extends Express.Application {
     delete: ((name: string) => any) & Express.IRouterMatcher<this>;
     head: ((name: string) => any) & Express.IRouterMatcher<this>;
     all: ((name: string) => any) & Express.IRouterMatcher<this>;
-}
-
-export interface ExpressoVerbFn {
-    <P = ParamsDictionary, ResBody = any, ReqBody = any, ReqQuery = ParsedQs,
-        Locals extends Record<string, any> = Record<string, any>>
-    (
-        this: Expresso<any>,
-        name: P,
-        ...handlers: Array<Express.RequestHandlerParams<P, ResBody, ReqBody, ReqQuery, Locals>>
-    ): any
 }
 
 export interface Expresso<CK = ConfigKeys> extends ExpressoApplication {

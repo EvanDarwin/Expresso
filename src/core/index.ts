@@ -9,6 +9,7 @@
  */
 
 export * from "./app";
+export * from "./async";
 export * from "./config";
 export * from "./db";
 export * from "./render";
