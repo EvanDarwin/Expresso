@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * == Expresso Framework ==
  *
@@ -8,20 +10,30 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
+import * as ansiColors from "ansi-colors";
 import * as minimist from "minimist";
-import {testConnections} from "./lib";
+import {Logger} from "tslog";
+import {compileSass, testConnections} from "./lib";
 
 const argv = minimist(process.argv.slice(2))
 const [subcommand] = argv._
 
 declare module "minimist";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const VERSION = require("../../package.json").version;
+
 function help(): never {
     console.log([
-        `expresso - An express framework\n---\n`,
-        'Commands:',
-        `\tcompile\t\tCompile static assets`,
-        '\ttest\t\tTest connection details',
+        `${ansiColors.yellow("expresso " + VERSION)} :: ${ansiColors.gray("An express framework")}`,
+        ansiColors.yellow(`---\n`),
+        ansiColors.underline.green('Commands:'),
+        ...Object.entries({
+            "db:test": "Test database connection details",
+            "db:sync": "Synchronize database schema",
+            "sass:compile": "Compile SASS",
+        }).map(([k, v]) => `  ${ansiColors.cyan(k.padEnd(15, ' '))}${ansiColors.whiteBright(v)}`),
+        ''
     ].join('\n'))
     process.exit(2);
 }
@@ -30,14 +42,23 @@ if (!subcommand) {
     help();
 }
 
+const log = new Logger({displayFunctionName: false});
 switch (subcommand.toLowerCase()) {
-    case "test":
+    case "db:test":
         // verify that connections are working
-        testConnections()
+        testConnections(log)
             .then(() => process.exit(0))
-            .catch((e) => {
-                console.error(e);
-                process.exit(1)
-            });
+            .catch(() => process.exit(1));
+        break;
+    case "db:sync":
+        // TODO: Sync DB
+        break;
+    case "sass:compile":
+        compileSass(log)
+            .then(() => process.exit(0))
+            .catch(() => process.exit(1));
+        break;
+    default:
+        help();
 }
 
