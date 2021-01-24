@@ -16,4 +16,4 @@ export * from "./render";
 export * from "./response";
 
 // noinspection JSUnusedGlobalSymbols
-export {default as middleware} from "./middleware";
+export {Middleware as middleware} from "./middleware";

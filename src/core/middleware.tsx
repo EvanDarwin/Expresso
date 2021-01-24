@@ -20,8 +20,6 @@ import {NotFoundErrorPage} from "../preact/components/error/NotFoundErrorPage";
 import {ExpressoRequest, ExpressoResponse} from "../types";
 import {renderJSX} from "./render";
 
-type HelmetOptions = Parameters<typeof helmetBase>[0]
-
 const _internal_log = debug("expresso:http")
 _internal_log.color = "36";
 export const InternalMiddleware: { requestLogger: RequestHandler } = {
@@ -43,30 +41,56 @@ export const InternalMiddleware: { requestLogger: RequestHandler } = {
     },
 }
 
-export default {
-    /** Common express request parsers */
+export interface Middleware {
     parsers: {
         /**
          * JSON data parser
          * @see express.json
          */
-        json: jsonMiddleware,
+        json: typeof jsonMiddleware,
 
         /**
          * Raw data parser
          * @see express.raw
          */
-        raw,
+        raw: typeof raw,
 
         /**
          * URL encoded data parser
          * @see express.urlencoded
          */
-        urlencoded
-    },
+        urlencoded: typeof urlencoded,
+    };
 
+    /**
+     * Include the 'helmet' security middleware
+     * @see helmet
+     */
+    helmet: typeof helmetBase;
+
+    /**
+     * Bind either the default 404 page, or define your own custom renderer.
+     * This middleware must be defined **AFTER** all other routes, or you will
+     * encounter unwanted 404 errors.
+     */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    notFound: (fn?: (req: ExpressoRequest, res: ExpressoResponse) => any): RequestHandler => {
+    notFound(fn?: (req: ExpressoRequest, res: ExpressoResponse) => any): RequestHandler;
+
+    /** Bind either the default error page, or define your own custom renderer. */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    error(fn?: (res: ExpressoResponse, err: Error) => any): ErrorRequestHandler;
+
+    /** Bind a directory to the /static path in Express */
+    static(path: string, opts?: ServeStaticOptions): RequestHandler
+}
+
+/** Popular, useful middlewares for expresso/express */
+export const Middleware: Middleware = {
+    parsers: {json: jsonMiddleware, raw, urlencoded},
+
+    helmet: helmetBase,
+
+    notFound: (fn?): RequestHandler => {
         // noinspection UnnecessaryLocalVariableJS
         const expressoNotFound: RequestHandler = (req, res) => {
             res.status(404)
@@ -81,7 +105,7 @@ export default {
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (fn?: (res: ExpressoResponse, err: Error) => any): ErrorRequestHandler => {
+    error: (fn?): ErrorRequestHandler => {
         // the fourth parameter is required for express to detect it as an error handler
         // noinspection UnnecessaryLocalVariableJS
         const expressoError: ErrorRequestHandler =
@@ -98,22 +122,6 @@ export default {
         return expressoError;
     },
 
-    /**
-     * Include the 'helmet' security middleware
-     *
-     * @param {HelmetOptions} opts      helmet configuration options
-     * @returns {e.RequestHandler}      The helmet middleware
-     */
-    helmet: (opts?: HelmetOptions): RequestHandler => {
-        return helmetBase(opts)
-    },
-
-    /**
-     * Bind a directory to the /static path in Express
-     *
-     * @param {string} path The local static resources directory
-     * @param {ServeStaticOptions} opts Static options
-     */
     static: (path: string, opts?: ServeStaticOptions): RequestHandler => {
         return express.static(path, opts)
     },
