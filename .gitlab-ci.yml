@@ -46,6 +46,8 @@ test-node-12:
   image: node:12
   before_script:
     - yarn
+    - yarn global add pg
+    - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
   artifacts:
@@ -60,6 +62,8 @@ test-node-13:
   image: node:13
   before_script:
     - yarn
+    - yarn global add pg
+    - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
   artifacts:
@@ -74,6 +78,8 @@ test-node-14:
   image: node:14
   before_script:
     - yarn
+    - yarn global add pg
+    - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
   artifacts:
