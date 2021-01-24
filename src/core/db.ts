@@ -22,15 +22,12 @@ export async function connect(name: string): Promise<Connection>;
 export async function connect(options: ConnectionOptions): Promise<Connection>;
 export async function connect(opt?: string | ConnectionOptions): Promise<Connection> {
     // patch typeorm
+    const _cwd = process.cwd();
     Object.defineProperty(ConnectionOptionsReader.prototype, 'baseDirectory', {
         /**
          * Gets directory where configuration file should be located.
          */
-        get: function () {
-            if (this.options && this.options.root)
-                return this.options.root;
-            return process.cwd();
-        },
+        value: _cwd,
         enumerable: true,
         configurable: true
     })

@@ -47,7 +47,6 @@ test-node-10:
   needs: [ lint ]
   before_script:
     - yarn
-    - yarn global add pg
     - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
@@ -64,7 +63,6 @@ test-node-12:
   needs: [ lint ]
   before_script:
     - yarn
-    - yarn global add pg
     - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
@@ -81,7 +79,6 @@ test-node-13:
   needs: [ lint ]
   before_script:
     - yarn
-    - yarn global add pg
     - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
@@ -98,7 +95,6 @@ test-node-14:
   needs: [ lint ]
   before_script:
     - yarn
-    - yarn global add pg
     - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage
@@ -115,7 +111,6 @@ test-node-15:
   needs: [ lint ]
   before_script:
     - yarn
-    - yarn global add pg
     - cp $CI_ORM_CONFIG ormconfig.json
   script:
     - yarn test:coverage

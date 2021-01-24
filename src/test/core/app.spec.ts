@@ -1,4 +1,5 @@
 import {expect} from "chai";
+import {Logger} from "tslog";
 import {expresso} from "../../core";
 
 describe("core/app", () => {
@@ -22,6 +23,49 @@ describe("core/app", () => {
 
                 it("default value works", () =>
                     expect(_app.env('__NO_EXIST__', 'test')).to.eq('test'));
+            })
+
+            describe("app.debug", () => {
+                it("matches APP_DEBUG", () =>
+                    expect(_app.debug).to.eq(!!process.env.APP_DEBUG))
+            })
+
+            describe("app.logger", () => {
+                it("is a Logger instance", () =>
+                    expect(_app.logger).to.be.instanceof(Logger))
+            })
+
+            describe("app.request", () => {
+                it(".logger is a Logger instance", () =>
+                    expect(_app.request.logger).to.be.instanceof(Logger))
+
+                it("_app.request.logger === _app.logger", () =>
+                    expect(_app.logger).to.eq(_app.request.logger))
+
+                // these will be NaN as there is no value on req.at
+                it(".msTotal", () =>
+                    expect(_app.request.msTotal).to.be.NaN)
+
+                it(".currentMs", () =>
+                    expect(_app.request.currentMs).to.be.NaN)
+                // end NaN
+
+                it(".uuid", () =>
+                    expect(_app.request.uuid).to.be.instanceof(String))
+            })
+        })
+
+        describe("express functionality", () => {
+            describe("res.send()", () => {
+                return true;
+            })
+
+            describe("verb methods", () => {
+                ["get", "post", "put", "delete", "patch", "head", "options"].forEach(verb => {
+                    it("app." + verb + "()", () => {
+                        return true;
+                    })
+                })
             })
         })
     })

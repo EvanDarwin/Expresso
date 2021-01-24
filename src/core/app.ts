@@ -43,7 +43,7 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     log('patch finished')
 
     // Only load the HTTP logger if debug is enabled
-    if (app.debug || (process.env['DEBUG'] || '').length > 0) app.use(InternalMiddleware.requestLogger)
+    if (app.debug) app.use(InternalMiddleware.requestLogger)
     log('middleware ready')
 
     return app;
@@ -84,7 +84,7 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     Object.defineProperty(app, 'debug', {
         get() {
             // This is unsafe, however env is already defined at this point
-            return !!+((app as unknown as Expresso).env('APP_DEBUG', 0) || '0')
+            return !!+((<Expresso>app).env('APP_DEBUG', 0))
         }
     })
 
@@ -111,6 +111,17 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
         })
     })
 
+    // Define the `req.uuid` property on Request, for unique request IDs
+    Object.defineProperty(app.request, 'uuid', {
+        get(this: ExpressoRequest & { __uuid?: string; }) {
+            if (!this.__uuid) Object.defineProperty(this, '__uuid', {
+                value: config.generators.requestID(),
+                writable: false
+            })
+            return <string>this.__uuid;
+        }
+    })
+
     // Wrap common verb methods with async support
     const methodNames: (keyof ExpressoApplication)[] = ['all', 'use', 'get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
@@ -124,17 +135,6 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
             }
         })
     }
-
-    // Define the `req.uuid` property on Request, for unique request IDs
-    Object.defineProperty(app.request, 'uuid', {
-        get(this: ExpressoRequest & { __uuid?: string; }) {
-            if (!this.__uuid) Object.defineProperty(this, '__uuid', {
-                value: config.generators.requestID(),
-                writable: false
-            })
-            return <string>this.__uuid;
-        }
-    })
 
     // wrap send
     const _send = app.response.send;
