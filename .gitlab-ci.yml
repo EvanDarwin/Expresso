@@ -111,7 +111,7 @@ test-node-14:
 
 test-node-15:
   stage: build
-  image: node:14
+  image: node:15
   needs: [ lint ]
   before_script:
     - yarn
