@@ -1,29 +1,34 @@
-# You can override the included template(s) by including variable overrides
-# See https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
 image: node:latest
+
 stages:
-- test
-- build
+  - test
+  - build
+
 cache:
   paths:
-  - node_modules/
-  - ".yarn"
-  - build
-  - tsconfig.tsbuildinfo
+    - node_modules/
+    - ".yarn"
+    - build
+    - tsconfig.tsbuildinfo
+
+variables:
+  POSTGRES_DB: expresso
+  POSTGRES_PASSWORD: expresso
+  POSTGRES_HOST_AUTH_METHOD: trust
+
 include:
-- template: Dependency-Scanning.gitlab-ci.yml
-- template: Security/SAST.gitlab-ci.yml
+  - template: Dependency-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
 lint:
   stage: test
   allow_failure: true
   script:
-  - yarn --frozen-lockfile
-  - yarn lint --format gitlab
+    - yarn --frozen-lockfile
+    - yarn lint --format gitlab
   artifacts:
     paths:
-    - gl-codequality.json
+      - gl-codequality.json
     reports:
       codequality: gl-codequality.json
 
@@ -45,6 +50,8 @@ test-node-10:
   stage: build
   image: node:10
   needs: [ lint ]
+  services:
+    - postgres
   before_script:
     - yarn
     - cp $CI_ORM_CONFIG ormconfig.json
@@ -61,6 +68,8 @@ test-node-12:
   stage: build
   image: node:12
   needs: [ lint ]
+  services:
+    - postgres
   before_script:
     - yarn
     - cp $CI_ORM_CONFIG ormconfig.json
@@ -77,6 +86,8 @@ test-node-13:
   stage: build
   image: node:13
   needs: [ lint ]
+  services:
+    - postgres
   before_script:
     - yarn
     - cp $CI_ORM_CONFIG ormconfig.json
@@ -93,6 +104,8 @@ test-node-14:
   stage: build
   image: node:14
   needs: [ lint ]
+  services:
+    - postgres
   before_script:
     - yarn
     - cp $CI_ORM_CONFIG ormconfig.json
@@ -109,6 +122,8 @@ test-node-15:
   stage: build
   image: node:15
   needs: [ lint ]
+  services:
+    - postgres
   before_script:
     - yarn
     - cp $CI_ORM_CONFIG ormconfig.json
