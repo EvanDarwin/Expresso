@@ -41,6 +41,40 @@ sast:
     SAST_EXCLUDED_ANALYZERS: bandit, brakeman, flawfinder, gosec, kubesec, phpcs-security-audit,
       pmd-apex, security-code-scan, sobelow, spotbugs
 
+test-node-10:
+  stage: build
+  image: node:10
+  needs: [ lint ]
+  before_script:
+    - yarn
+    - yarn global add pg
+    - cp $CI_ORM_CONFIG ormconfig.json
+  script:
+    - yarn test:coverage
+  artifacts:
+    reports:
+      junit:
+        - test-results.xml
+      cobertura:
+        - coverage/cobertura-coverage.xml
+
+test-node-11:
+  stage: build
+  image: node:11
+  needs: [ lint ]
+  before_script:
+    - yarn
+    - yarn global add pg
+    - cp $CI_ORM_CONFIG ormconfig.json
+  script:
+    - yarn test:coverage
+  artifacts:
+    reports:
+      junit:
+        - test-results.xml
+      cobertura:
+        - coverage/cobertura-coverage.xml
+
 test-node-12:
   stage: build
   image: node:12
@@ -76,6 +110,23 @@ test-node-13:
         - coverage/cobertura-coverage.xml
 
 test-node-14:
+  stage: build
+  image: node:14
+  needs: [ lint ]
+  before_script:
+    - yarn
+    - yarn global add pg
+    - cp $CI_ORM_CONFIG ormconfig.json
+  script:
+    - yarn test:coverage
+  artifacts:
+    reports:
+      junit:
+        - test-results.xml
+      cobertura:
+        - coverage/cobertura-coverage.xml
+
+test-node-15:
   stage: build
   image: node:14
   needs: [ lint ]
