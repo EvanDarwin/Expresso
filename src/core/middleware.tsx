@@ -8,6 +8,8 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
+import * as ansiColors from "ansi-colors"
+import debug from "debug";
 import * as express from "express";
 import {ErrorRequestHandler, json as jsonMiddleware, NextFunction, raw, RequestHandler, urlencoded} from "express";
 import * as helmetBase from "helmet";
@@ -19,6 +21,27 @@ import {ExpressoRequest, ExpressoResponse} from "../types";
 import {renderJSX} from "./render";
 
 type HelmetOptions = Parameters<typeof helmetBase>[0]
+
+const _internal_log = debug("expresso:http")
+_internal_log.color = "36";
+export const InternalMiddleware: { requestLogger: RequestHandler } = {
+    requestLogger: (req, res, next) => {
+        _internal_log(`${ansiColors.green(req.method)} ${ansiColors.yellowBright(req.path)}`);
+        (req as ExpressoRequest).at = new Date();
+        res.on('finish', () => {
+            let codeColored = res.statusCode.toString();
+            if (+codeColored < 400) {
+                codeColored = ansiColors.green(codeColored)
+            } else if (+codeColored >= 400 && +codeColored < 500) {
+                codeColored = ansiColors.yellow(codeColored)
+            } else {
+                codeColored = ansiColors.red(codeColored)
+            }
+            _internal_log(`${ansiColors.green(req.method)} ${ansiColors.yellowBright(req.path)} - ${codeColored}`)
+        })
+        next()
+    },
+}
 
 export default {
     /** Common express request parsers */

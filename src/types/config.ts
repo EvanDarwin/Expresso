@@ -15,6 +15,9 @@ import {ConfigSetDataSimple} from "../core";
  */
 export interface ExpressoConfiguration<CK = ConfigKeys> {
     __secret: Map<CK, string | boolean | number | undefined>;
+    generators: {
+        requestID: () => string;
+    }
 }
 
 /**
@@ -33,4 +36,6 @@ export type ExpressoEnv<CK> = <T>(key: CK, defaultValue?: T) => T | undefined;
 
 export interface ExpressoOptions<E = ConfigSetDataSimple> {
     env?: E;
+    trustProxy?: string|number;
+    getRequestID?: () => Promise<string> | string;
 }

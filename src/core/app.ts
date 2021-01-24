@@ -8,38 +8,79 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
-import * as ansiColors from "ansi-colors";
 import debug from "debug";
 import type {Express, RequestHandler} from "express";
 import * as express from "express";
 import type {IRouterMatcher} from "express-serve-static-core"
 import {Logger} from "tslog";
-import {v4 as uuidv4} from "uuid";
 import {readConfiguration, renderJSX, renderXML} from ".";
-import type {ConfigKeys, Expresso, ExpressoApplication, ExpressoEnv, ExpressoOptions, ExpressoRequest} from "../types";
+import type {
+    ConfigKeys,
+    Expresso,
+    ExpressoApplication,
+    ExpressoConfiguration,
+    ExpressoEnv,
+    ExpressoOptions,
+    ExpressoRequest
+} from "../types";
 import {asyncHandler} from "./async";
+import {InternalMiddleware} from "./middleware";
 
 /**
- * Construct a new expresso framework application
+ * Create a new expresso framework application.
+ * The `expresso()` applies the necessary bindings for the framework,
+ * you should NOT use `express()`.
+ *
  * @param {ExpressoOptions<E>} options
  * @returns {Expresso<EK>}
  */
 export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoOptions<E> = {}): Expresso<EK> {
     const log = debug('expresso:app')
     log('creating app')
-    const config = readConfiguration<EK>(options.env || {});
-    const app = express();
 
+    const config = readConfiguration<EK>(options.env || {});
+    const app = bindExpressApplication<E, EK>(options || {}, config, express());
+    log('patch finished')
+
+    // Only load the HTTP logger if debug is enabled
+    if (app.debug || (process.env['DEBUG'] || '').length > 0) app.use(InternalMiddleware.requestLogger)
+    log('middleware ready')
+
+    return app;
+}
+
+/**
+ * Apply property bindings and assignment to the standard express Application
+ *
+ * @internal
+ * @param opts
+ * @param {ExpressoConfiguration<EK>} config
+ * @param {e.Express} app
+ * @returns {Expresso<EK>}
+ */
+function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: ExpressoConfiguration<EK>, app: Express): Expresso<EK> {
     /** Preferred defaults */
     app.disable('x-powered-by')
 
-    /** Custom express app bindings */
+    /** User options */
+    if (opts.trustProxy) {
+        app.set('trust proxy', opts.trustProxy)
+    }
+
+    /**
+     * Define new properties on express objects. These will not modify
+     * the actual express prototypes, so they can be used safely.
+     */
+
+    // Define the `app.env` property
     Object.defineProperty(app, 'env', {
         value: function <D>(key: EK, defaultValue?: D) {
             return config.__secret.get(key) || defaultValue;
         } as ExpressoEnv<EK>
     })
 
+    // Define the `app.debug` property, for determining if the application is
+    // running in debug mode
     Object.defineProperty(app, 'debug', {
         get() {
             // This is unsafe, however env is already defined at this point
@@ -47,48 +88,51 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         }
     })
 
+    // Define the `app.logger` property, for a common logger
     Object.defineProperty(app, 'logger', {
         value: new Logger({displayFunctionName: false})
     })
 
+    // Additionally, set a getter on the Request object to access
+    // the logger from `req`
     Object.defineProperty(app.request, 'logger', {
         get(this: ExpressoRequest): Logger {
             return this.app.logger;
         }
+    });
+
+    // Define the getter method for retrieving the current ms diff since
+    // the request began.
+    ['msTotal', 'currentMs'].forEach(k => {
+        Object.defineProperty(app.request, k, {
+            get(): number {
+                return (+new Date) - +(this as ExpressoRequest).at
+            }
+        })
     })
 
-    Object.defineProperty(app.request, 'currentMs', {
-        get(): number {
-            return (+new Date) - +(this as ExpressoRequest).at
-        }
-    })
-
-    // This is now safe, the following changes are remapping existing properties
-    const patchedApp = app as unknown as Expresso<EK>;
-
-    // wrap verb methods with async support
-    const methodNames: (keyof ExpressoApplication)[] = ['get', 'post', 'patch', 'delete', 'put', 'options', 'head']
+    // Wrap common verb methods with async support
+    const methodNames: (keyof ExpressoApplication)[] = ['all', 'use', 'get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
         const _oldFn = app[<keyof Express>methodName];
-        Object.defineProperty(patchedApp, methodName, {
+        Object.defineProperty(app, methodName, {
             value: (...args: Parameters<IRouterMatcher<Expresso>>) => {
                 _oldFn.call(app, ...[
                     ...args.slice(0, args.length - 1),
-                    asyncHandler(patchedApp, args[args.length - 1] as RequestHandler)
+                    asyncHandler(app as Expresso, args[args.length - 1] as RequestHandler)
                 ]);
             }
         })
     }
 
-    // bind req.uuid
+    // Define the `req.uuid` property on Request, for unique request IDs
     Object.defineProperty(app.request, 'uuid', {
-        // __uuid is a hidden property, so it is typed as any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        get(this: ExpressoRequest & any) {
-            if (!this.__uuid) {
-                Object.defineProperty(this, '__uuid', {value: uuidv4(), writable: false})
-            }
-            return this.__uuid as string;
+        get(this: ExpressoRequest & { __uuid?: string; }) {
+            if (!this.__uuid) Object.defineProperty(this, '__uuid', {
+                value: config.generators.requestID(),
+                writable: false
+            })
+            return <string>this.__uuid;
         }
     })
 
@@ -110,31 +154,6 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
         }
     })
 
-    log('patch finished')
-
-    /** Logger, only loaded in dev mode or if `DEBUG` is defined, for performance reasons */
-    if (patchedApp.debug || (process.env['DEBUG'] || '').length > 0) {
-        const log = debug('expresso:http');
-        log.color = "36"
-        const expressoRequestLogger: RequestHandler = (req, res, next) => {
-            log(`${ansiColors.green(req.method)} ${ansiColors.yellowBright(req.path)}`);
-            (req as ExpressoRequest).at = new Date();
-            res.on('finish', () => {
-                let codeColored = res.statusCode.toString();
-                if (+codeColored < 400) {
-                    codeColored = ansiColors.green(codeColored)
-                } else if (+codeColored >= 400 && +codeColored < 500) {
-                    codeColored = ansiColors.yellow(codeColored)
-                } else {
-                    codeColored = ansiColors.red(codeColored)
-                }
-                log(`${ansiColors.green(req.method)} ${ansiColors.yellowBright(req.path)} - ${codeColored}`)
-            })
-            next()
-        }
-        patchedApp.use(expressoRequestLogger)
-    }
-    log('middleware ready')
-
-    return patchedApp;
+    // Expresso app is ready
+    return app as Expresso<EK>;
 }

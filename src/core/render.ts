@@ -32,6 +32,12 @@ export function renderJSX<D = Record<string, unknown>>(jsx: VNode, context?: D):
     return dom;
 }
 
+/**
+ * Render an XML dom into a string with jsx-xml
+ * @param {JSXNode} xml The XML dom
+ * @param {DocType} xmlDoctype The XML doctype to use
+ * @returns {string} The rendered XML output
+ */
 export function renderXML(xml: JSXNode, xmlDoctype: DocType = XMLDocType.XML_UTF8): string {
     const log = debug('expresso:render:xml')
     log.color = "34"
