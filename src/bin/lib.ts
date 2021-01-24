@@ -9,9 +9,9 @@
  */
 
 import * as ansi from "ansi-colors";
-import * as ansiColors from "ansi-colors";
 import * as fs from "fs";
 import * as path from "path";
+import * as sass from "sass";
 import {Logger} from "tslog";
 import {connect} from "../core";
 
@@ -53,12 +53,22 @@ export async function compileSass(log: Logger): Promise<void> {
     if (!foundFile) {
         const e = new Error([
             `Unable to compile SASS stylesheet. (no files available)\n`,
-            ansiColors.white(`  Attempted Paths:`),
-            ...tried.map(fp => `    ${ansiColors.gray("-")} ${ansiColors.underline.yellowBright(fp)}`), ''
+            ansi.white(`  Attempted Paths:`),
+            ...tried.map(fp => `    ${ansi.gray("-")} ${ansi.underline.yellowBright(fp)}`), ''
         ].join('\n'))
         log.error(e)
         return;
     }
 
     log.info(ansi.whiteBright(`Compiling ${ansi.yellowBright.underline(foundFile)}`))
+    const compiledSassBody = sass.renderSync({file: foundFile})
+    const staticDir = path.resolve(process.cwd(), 'static');
+    const outputFilePath = path.resolve(staticDir, 'app.css');
+    log.info(ansi.whiteBright(`Writing output to: ${ansi.yellowBright.underline(outputFilePath)}`));
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    fs.writeFileSync(outputFilePath, compiledSassBody.css);
+    // TODO: remove debugging
+    console.dir(compiledSassBody.stats, {depth: null})
+    log.info(ansi.greenBright(`Compiled successfully!`))
+
 }
