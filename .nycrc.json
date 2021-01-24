@@ -1,0 +1,15 @@
+{
+  "cache": false,
+  "extension": [
+    ".ts",
+    ".tsx"
+  ],
+  "check-coverage": true,
+  "include": [
+    "src/**"
+  ],
+  "statements": 25,
+  "branches": 10,
+  "functions": 10,
+  "lines": 25
+}

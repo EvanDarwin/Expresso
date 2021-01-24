@@ -8,6 +8,8 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
+import * as ansiColors from "ansi-colors"
+import debug from "debug";
 import * as express from "express";
 import {ErrorRequestHandler, json as jsonMiddleware, NextFunction, raw, RequestHandler, urlencoded} from "express";
 import * as helmetBase from "helmet";
@@ -20,8 +22,48 @@ import {renderJSX} from "./render";
 
 type HelmetOptions = Parameters<typeof helmetBase>[0]
 
+const _internal_log = debug("expresso:http")
+_internal_log.color = "36";
+export const InternalMiddleware: { requestLogger: RequestHandler } = {
+    requestLogger: (req, res, next) => {
+        _internal_log(`${ansiColors.green(req.method)} ${ansiColors.yellowBright(req.path)}`);
+        (req as ExpressoRequest).at = new Date();
+        res.on('finish', () => {
+            let codeColored = res.statusCode.toString();
+            if (+codeColored < 400) {
+                codeColored = ansiColors.green(codeColored)
+            } else if (+codeColored >= 400 && +codeColored < 500) {
+                codeColored = ansiColors.yellow(codeColored)
+            } else {
+                codeColored = ansiColors.red(codeColored)
+            }
+            _internal_log(`${ansiColors.green(req.method)} ${ansiColors.yellowBright(req.path)} - ${codeColored}`)
+        })
+        next()
+    },
+}
+
 export default {
-    parsers: {json: jsonMiddleware, raw, urlencoded},
+    /** Common express request parsers */
+    parsers: {
+        /**
+         * JSON data parser
+         * @see express.json
+         */
+        json: jsonMiddleware,
+
+        /**
+         * Raw data parser
+         * @see express.raw
+         */
+        raw,
+
+        /**
+         * URL encoded data parser
+         * @see express.urlencoded
+         */
+        urlencoded
+    },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     notFound: (fn?: (req: ExpressoRequest, res: ExpressoResponse) => any): RequestHandler => {

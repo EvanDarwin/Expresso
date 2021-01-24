@@ -10,8 +10,9 @@
 
 import debug from "debug";
 import {config as configEnv} from "dotenv";
-import {ConfigKeys, EnvConfigData, ExpressoConfiguration} from "../types";
+import {v4 as uuidv4} from "uuid";
 import {strEntropy} from "../ext/entropy";
+import {ConfigKeys, EnvConfigData, ExpressoConfiguration, ExpressoOptions} from "../types";
 
 export type ConfigSetDataSimple = { [key: string]: EnvConfigData };
 export const DefaultConfigSet: { [K in ConfigKeys]: EnvConfigData } = {
@@ -40,9 +41,10 @@ export const DefaultConfigSet: { [K in ConfigKeys]: EnvConfigData } = {
 
 const noop = <R>(s: R): R => s;
 
-export function readConfiguration<K = ConfigKeys>(customKeys?: { [key: string]: EnvConfigData }): ExpressoConfiguration<K> | never {
+export function readConfiguration<K = ConfigKeys>(options: ExpressoOptions): ExpressoConfiguration<K> | never {
     configEnv();
 
+    const customKeys = options.env
     const configMap = new Map<K, unknown>();
     const log = debug('expresso:config')
     log('verify environment')
@@ -68,5 +70,10 @@ export function readConfiguration<K = ConfigKeys>(customKeys?: { [key: string]: 
     }
 
     log('ready')
-    return <ExpressoConfiguration<K>>{__secret: configMap}
+    return <ExpressoConfiguration<K>>{
+        __secret: configMap,
+        generators: {
+            requestID: options.getRequestID || (() => (uuidv4().toString()))
+        }
+    }
 }

@@ -83,10 +83,23 @@ declare namespace Express {
     export interface Request<P = core.ParamsDictionary, ResBody = any, ReqBody = any,
         ReqQuery = core.Query, Locals extends Record<string, any> = Record<string, any>>
         extends BaseRequest<P, ResBody, ReqBody, ReqQuery, Locals> {
-        at: Date;
-        currentMs: number;
+        /** The expresso application */
         app: ExpressoApplication;
+
+        /** The date the request was initiated at */
+        at: Date;
+
+        /** The current difference in milliseconds between `req.at` and the current time. */
+        msTotal: number;
+
+        /** The current difference in milliseconds between `req.at` and the current time.
+         * @deprecated Please use `msTotal` in the future, this will be removed soon. */
+        currentMs: number;
+
+        /** A unique identifier for the current request */
         uuid: string;
+
+        /** A common logger */
         logger: Logger;
     }
 
