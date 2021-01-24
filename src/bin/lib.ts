@@ -33,7 +33,7 @@ export async function compileSass(log: Logger): Promise<void> {
     const tried: string[] = [];
 
     for (const ext of possibleExtensions) {
-        const filename = path.resolve(process.cwd(), 'sass', 'index' + ext)
+        const filename = path.resolve(process.cwd(), 'sass', 'app' + ext)
         tried.push(filename)
         let valid = false;
         try {
