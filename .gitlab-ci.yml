@@ -26,6 +26,7 @@ lint:
     - gl-codequality.json
     reports:
       codequality: gl-codequality.json
+
 audit:
   stage: test
   script:
@@ -33,23 +34,51 @@ audit:
   artifacts:
     reports:
       dependency_scanning: gl-dependency-scanning-report.json
-build-node-12:
-  stage: build
-  image: node:12
-  script:
-    - yarn
-build-node-13:
-  stage: build
-  image: node:13
-  script:
-    - yarn
-build-node-14:
-  stage: build
-  image: node:14
-  script:
-    - yarn
+
 sast:
+  stage: test
   variables:
     SAST_EXCLUDED_ANALYZERS: bandit, brakeman, flawfinder, gosec, kubesec, phpcs-security-audit,
       pmd-apex, security-code-scan, sobelow, spotbugs
-  stage: test
+
+test-node-12:
+  stage: build
+  image: node:12
+  before_script:
+    - yarn
+  script:
+    - yarn test:coverage
+  artifacts:
+    reports:
+      junit:
+        - test-results.xml
+      cobertura:
+        - coverage/cobertura-coverage.xml
+
+test-node-13:
+  stage: build
+  image: node:13
+  before_script:
+    - yarn
+  script:
+    - yarn test:coverage
+  artifacts:
+    reports:
+      junit:
+        - test-results.xml
+      cobertura:
+        - coverage/cobertura-coverage.xml
+
+test-node-14:
+  stage: build
+  image: node:14
+  before_script:
+    - yarn
+  script:
+    - yarn test:coverage
+  artifacts:
+    reports:
+      junit:
+        - test-results.xml
+      cobertura:
+        - coverage/cobertura-coverage.xml

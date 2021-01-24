@@ -1,0 +1,15 @@
+{
+  "diff": true,
+  "extension": [
+    "ts",
+    "tsx"
+  ],
+  "package": "./package.json",
+  "reporter": "spec",
+  "slow": 250,
+  "timeout": 1000,
+  "ui": "bdd",
+  "recursive": true,
+  "spec": "./src/**/*.spec.ts",
+  "retries": 1
+}

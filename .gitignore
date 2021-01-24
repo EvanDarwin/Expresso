@@ -4,3 +4,10 @@ node_modules
 *.iml
 yarn-error.log
 tsconfig.tsbuildinfo
+# coverage
+test-results.xml
+coverage/
+.nyc_output/
+# dev
+.env
+ormconfig.json
