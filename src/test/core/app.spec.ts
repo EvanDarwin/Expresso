@@ -51,7 +51,7 @@ describe("core/app", () => {
                 // end NaN
 
                 it(".uuid", () =>
-                    expect(_app.request.uuid).to.be.instanceof(String))
+                    expect(typeof _app.request.uuid).to.eq('string'));
             })
         })
 

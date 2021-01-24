@@ -73,7 +73,7 @@ export function readConfiguration<K = ConfigKeys>(options: ExpressoOptions): Exp
     return <ExpressoConfiguration<K>>{
         __secret: configMap,
         generators: {
-            requestID: options.getRequestID || uuidv4
+            requestID: options.getRequestID || (() => (uuidv4().toString()))
         }
     }
 }

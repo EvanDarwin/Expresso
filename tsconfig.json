@@ -27,5 +27,6 @@
     "esModuleInterop": false,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "exclude": ["./src/test"]
 }

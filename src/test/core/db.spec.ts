@@ -2,8 +2,11 @@ import {connect} from "../../core";
 
 describe("core/database", () => {
     describe("connect()", () => {
-        it("works", async () => {
-            return connect();
+        it("works", (done) => {
+            connect().then(db => {
+                db.close()
+                done();
+            }).catch(done);
         })
     })
 })
