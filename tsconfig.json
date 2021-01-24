@@ -28,5 +28,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["./src/test"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "./src/test"
+  ]
 }
