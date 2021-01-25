@@ -69,7 +69,8 @@ declare namespace Express {
         ReqQuery = ParsedQs,
         Locals extends Record<string, any> = Record<string, any>> =
         | Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
-        | Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>;
+        | Express.ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
+        | Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals> | Express.ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>;
 
     export interface Application extends core.Application {
         (req: ExpressoRequest | http.IncomingMessage, res: ExpressoResponse | http.ServerResponse): any;
@@ -108,6 +109,17 @@ declare namespace Express {
         xml(this: ExpressoRequest, dom: JSXNode): void;
     }
 
+    export type ErrorRequestHandler<P = ParamsDictionary,
+        ResBody = any,
+        ReqBody = any,
+        ReqQuery = ParsedQs,
+        Locals extends Record<string, any> = Record<string, any>> = (
+        err: Error | any,
+        req: ExpressoRequest<P, ResBody, ReqBody, ReqQuery, Locals>,
+        res: ExpressoResponse<ResBody, Locals>,
+        next: NextFunction,
+    ) => void;
+
     export interface RequestHandler<P = ParamsDictionary,
         ResBody = any,
         ReqBody = any,
@@ -130,6 +142,7 @@ export interface ExpressoApplication extends Express.Application {
     delete: ((name: string) => any) & Express.IRouterMatcher<this>;
     head: ((name: string) => any) & Express.IRouterMatcher<this>;
     all: ((name: string) => any) & Express.IRouterMatcher<this>;
+    use: Express.IRouterMatcher<this> & core.IRouterHandler<this> & ((...params: Express.RequestHandlerParams[]) => any)
 }
 
 export interface Expresso<CK = ConfigKeys> extends ExpressoApplication {
@@ -164,3 +177,9 @@ export interface Route {
     stack: Layer[];
     methods: { [K in 'get' | 'post' | 'patch' | 'put' | 'delete' | 'head']: boolean },
 }
+
+export type ErrorRequestHandler<P = ParamsDictionary,
+    ResBody = any,
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    Locals extends Record<string, any> = Record<string, any>> = Express.ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>;

@@ -17,7 +17,7 @@ import {h} from "preact";
 import {ServeStaticOptions} from "serve-static";
 import {InternalErrorPage} from "../preact/components/error/InternalErrorPage";
 import {NotFoundErrorPage} from "../preact/components/error/NotFoundErrorPage";
-import {ExpressoRequest, ExpressoResponse} from "../types";
+import {ErrorRequestHandler, ExpressoRequest, ExpressoResponse} from "../types";
 import {renderJSX} from "./render";
 
 const _internal_log = debug("expresso:http")
@@ -87,9 +87,7 @@ export interface Middleware {
 
     /** Bind either the default error page, or define your own custom renderer. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error(fn?: (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any):
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any;
+    error(fn?: ErrorRequestHandler): ErrorRequestHandler;
 
     /** Bind a directory to the /static path in Express */
     static(path: string, opts?: ServeStaticOptions): RequestHandler
@@ -123,7 +121,7 @@ export const Middleware: Middleware = {
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (fn?) => {
+    error: (fn?: ErrorRequestHandler): ErrorRequestHandler => {
         if (typeof fn === 'function') return fn
         // the fourth parameter is required for express to detect it as an error handler
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
