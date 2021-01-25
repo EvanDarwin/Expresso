@@ -5,6 +5,7 @@
     "tsx"
   ],
   "package": "./package.json",
+  "file": "./src/mocha.ts",
   "reporter": "spec",
   "slow": 250,
   "timeout": 1000,

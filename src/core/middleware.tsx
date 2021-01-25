@@ -11,7 +11,7 @@
 import * as ansiColors from "ansi-colors"
 import debug from "debug";
 import * as express from "express";
-import {ErrorRequestHandler, json as jsonMiddleware, NextFunction, raw, RequestHandler, urlencoded} from "express";
+import {json as jsonMiddleware, NextFunction, raw, RequestHandler, urlencoded} from "express";
 import * as helmetBase from "helmet";
 import {h} from "preact";
 import {ServeStaticOptions} from "serve-static";
@@ -78,7 +78,8 @@ export interface Middleware {
 
     /** Bind either the default error page, or define your own custom renderer. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error(fn?: (res: ExpressoResponse, err: Error) => any): ErrorRequestHandler;
+    error(fn?: (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any):
+        (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any;
 
     /** Bind a directory to the /static path in Express */
     static(path: string, opts?: ServeStaticOptions): RequestHandler
@@ -105,21 +106,13 @@ export const Middleware: Middleware = {
     },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (fn?): ErrorRequestHandler => {
+    error: (fn?) => {
+        if (typeof fn === 'function') return fn
         // the fourth parameter is required for express to detect it as an error handler
-        // noinspection UnnecessaryLocalVariableJS
-        const expressoError: ErrorRequestHandler =
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            (err: Error, req, res, next: NextFunction) => {
-                if (!res.statusCode || res.statusCode === 200) res.status(500)
-                const _ret = !fn
-                    ? renderJSX(<InternalErrorPage req={req as ExpressoRequest} error={err}/>)
-                    : fn(res as ExpressoResponse, err)
-                if (typeof _ret === 'string') {
-                    res.send(_ret)
-                }
-            }
-        return expressoError;
+        return function expressoError(err: Error, req: express.Request, res: express.Response, next: NextFunction) {
+            if (!res.statusCode || res.statusCode === 200) res.status(500)
+            res.send(renderJSX(<InternalErrorPage req={req as ExpressoRequest} error={err}/>));
+        }
     },
 
     static: (path: string, opts?: ServeStaticOptions): RequestHandler => {

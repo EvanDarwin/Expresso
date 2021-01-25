@@ -123,7 +123,7 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     })
 
     // Wrap common verb methods with async support
-    const methodNames: (keyof ExpressoApplication)[] = ['all', 'use', 'get', 'post', 'patch', 'delete', 'put', 'options', 'head']
+    const methodNames: (keyof ExpressoApplication)[] = ['all', 'get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
         const _oldFn = app[<keyof Express>methodName];
         Object.defineProperty(app, methodName, {

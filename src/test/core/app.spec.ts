@@ -1,6 +1,7 @@
+import * as chai from "chai";
 import {expect} from "chai";
 import {Logger} from "tslog";
-import {expresso} from "../../core";
+import {expresso, middleware} from "../../core";
 
 describe("core/app", () => {
     describe("expresso()", () => {
@@ -55,15 +56,56 @@ describe("core/app", () => {
             })
         })
 
-        describe("express functionality", () => {
+        describe("expresso functionality", () => {
             describe("res.send()", () => {
                 return true;
             })
 
-            describe("verb methods", () => {
-                ["get", "post", "put", "delete", "patch", "head", "options"].forEach(verb => {
-                    it("app." + verb + "()", () => {
-                        return true;
+            const verbs = ["get", "post", "put", "delete", "patch", "head", "options"];
+
+            describe("async verb methods", () => {
+                verbs.forEach(verb => {
+                    it("app." + verb + "()", (done) => {
+                        const app = expresso();
+
+                        app[verb]('/', async (req, res) => {
+                            setTimeout(() => {
+                                res.status(201).send();
+                            }, 3)
+                        });
+
+                        chai.request(app)[verb]('/')
+                            .end((err, res) => {
+                                if (err) return done(err)
+                                expect(res).to.have.status(201);
+                                done();
+                            })
+                    })
+                })
+            })
+
+            describe("async verb method errors", () => {
+                verbs.forEach(verb => {
+                    it("app." + verb + "() error is handled", (done) => {
+                        const app = expresso();
+
+                        app[verb]('/', async (req, res) => {
+                            throw new Error();
+                            res.send();
+                        });
+
+                        app.use(middleware.error((err, req, res, next) => {
+                            res.status(500)
+                            res.send('pass')
+                        }))
+
+                        chai.request(app)[verb]('/')
+                            .end((err, res: Response) => {
+                                if (err) return done(err)
+                                expect(res.status).to.eq(500)
+                                if (verb !== 'head') expect(res.text).to.eq('pass')
+                                done();
+                            })
                     })
                 })
             })
