@@ -1,12 +1,15 @@
 <center>
+
 # Expresso
 
-### [Documentation](https://expresso.evan.guru/) | [Repository](https://gitlab.com/Evan_Darwin/expresso)
+## [Documentation](https://expresso.evan.guru/) | [Repository](https://gitlab.com/Evan_Darwin/expresso)
 
 [![pipeline status](https://gitlab.com/Evan_Darwin/expresso/badges/master/pipeline.svg)](https://gitlab.com/Evan_Darwin/expresso/-/commits/master) [![coverage report](https://gitlab.com/Evan_Darwin/expresso/badges/master/coverage.svg)](https://gitlab.com/Evan_Darwin/expresso/-/commits/master)
 
-#### TypeScript + Express + TypeORM + Preact = 💖
+### TypeScript + Express + TypeORM + Preact = 💖
+
 </center>
+
 -----
 
 Welcome to the **Expresso Framework**! Expresso is a wrapper around express, which aims to:
