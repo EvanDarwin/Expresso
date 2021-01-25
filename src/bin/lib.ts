@@ -61,10 +61,10 @@ export async function compileSass(log: Logger): Promise<void> {
     }
 
     log.info(ansi.whiteBright(`Compiling ${ansi.yellowBright.underline(foundFile)}`))
-    const compiledSassBody = sass.renderSync({file: foundFile})
+    const compiledSassBody = sass.renderSync({file: foundFile, outputStyle: "compressed"})
     const staticDir = path.resolve(process.cwd(), 'static');
     const outputFilePath = path.resolve(staticDir, 'app.css');
-    log.info(ansi.whiteBright(`Writing output to: ${ansi.yellowBright.underline(outputFilePath)}`));
+    log.info(ansi.whiteBright(`Writing ${ansi.yellowBright.underline(outputFilePath)}`));
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fs.writeFileSync(outputFilePath, compiledSassBody.css);
     log.info(ansi.greenBright(`Compiled successfully!`))
