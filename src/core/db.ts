@@ -47,6 +47,6 @@ export async function connect(opt?: string | ConnectionOptions): Promise<Connect
         return c;
     }).catch((e) => {
         (new Logger({displayFunctionName: false})).error(e)
-        process.exit(1);
+        return Promise.reject(e);
     });
 }

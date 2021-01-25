@@ -16,6 +16,7 @@ import type {NextFunction, Request as BaseRequest, Response as BaseResponse} fro
 import type {ParamsDictionary} from "express-serve-static-core";
 import * as core from "express-serve-static-core";
 import * as http from "http";
+import {JSXNode} from "jsx-xml";
 import type {ParsedQs} from "qs";
 import {Logger} from "tslog";
 import type {ConfigKeys, ExpressoEnv} from "./config";
@@ -104,6 +105,7 @@ declare namespace Express {
     }
 
     export interface Response<ResBody = any, Locals extends Record<string, any> = Record<string, any>> extends BaseResponse<ResBody, Locals> {
+        xml(this: ExpressoRequest, dom: JSXNode): void;
     }
 
     export interface RequestHandler<P = ParamsDictionary,

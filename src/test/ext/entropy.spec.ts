@@ -8,15 +8,11 @@
  * @copyright 2021 - Evan Darwin <evan@relta.net>
  */
 
-import {connect} from "../../core";
+import {expect} from "chai";
+import {strEntropy} from "../../ext/entropy";
 
-describe("core/database", () => {
-    describe("connect()", () => {
-        it("works", (done) => {
-            connect().then(db => {
-                db.close()
-                done();
-            }).catch(done);
-        })
+describe("ext/entropy", () => {
+    it("works", () => {
+        expect(strEntropy("abc")).to.eq(14)
     })
 })

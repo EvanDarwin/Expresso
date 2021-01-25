@@ -5,11 +5,11 @@
     "tsx"
   ],
   "package": "./package.json",
+  "file": "./src/mocha.ts",
   "reporter": "spec",
   "slow": 250,
   "timeout": 1000,
   "ui": "bdd",
   "recursive": true,
-  "spec": "./src/**/*.spec.ts",
-  "retries": 1
+  "spec": "./src/**/*.spec.{ts,tsx}"
 }

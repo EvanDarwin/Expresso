@@ -1,14 +1,9 @@
-<center>
-
 # Expresso
-
 ## [Documentation](https://expresso.evan.guru/) | [Repository](https://gitlab.com/Evan_Darwin/expresso)
 
 [![pipeline status](https://gitlab.com/Evan_Darwin/expresso/badges/master/pipeline.svg)](https://gitlab.com/Evan_Darwin/expresso/-/commits/master) [![coverage report](https://gitlab.com/Evan_Darwin/expresso/badges/master/coverage.svg)](https://gitlab.com/Evan_Darwin/expresso/-/commits/master)
 
 ### TypeScript + Express + TypeORM + Preact = 💖
-
-</center>
 
 -----
 

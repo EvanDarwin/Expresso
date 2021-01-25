@@ -12,6 +12,8 @@ import debug from "debug";
 import type {Express, RequestHandler} from "express";
 import * as express from "express";
 import type {IRouterMatcher} from "express-serve-static-core"
+import {JSXNode} from "jsx-xml";
+import {VNode} from "preact";
 import {Logger} from "tslog";
 import {readConfiguration, renderJSX, renderXML} from ".";
 import type {
@@ -39,11 +41,13 @@ export function expresso<E, K = keyof E, EK = K | ConfigKeys>(options: ExpressoO
     log('creating app')
 
     const config = readConfiguration<EK>(options.env || {});
-    const app = bindExpressApplication<E, EK>(options || {}, config, express());
+    const app = bindExpressApplication<E, EK>(options, config, express());
     log('patch finished')
 
     // Only load the HTTP logger if debug is enabled
-    if (app.debug) app.use(InternalMiddleware.requestLogger)
+    if (app.debug) {
+        app.use(InternalMiddleware.requestLogger)
+    }
     log('middleware ready')
 
     return app;
@@ -63,7 +67,8 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     app.disable('x-powered-by')
 
     /** User options */
-    if (opts.trustProxy) {
+    if (typeof opts.trustProxy !== 'undefined') {
+        app.enable('trust proxy')
         app.set('trust proxy', opts.trustProxy)
     }
 
@@ -84,7 +89,9 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     Object.defineProperty(app, 'debug', {
         get() {
             // This is unsafe, however env is already defined at this point
-            return !!+((<Expresso>app).env('APP_DEBUG', 0))
+            return (typeof opts.debug === 'undefined')
+                ? !!+((<Expresso>app).env('APP_DEBUG', 0))
+                : opts.debug;
         }
     })
 
@@ -114,16 +121,18 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     // Define the `req.uuid` property on Request, for unique request IDs
     Object.defineProperty(app.request, 'uuid', {
         get(this: ExpressoRequest & { __uuid?: string; }) {
-            if (!this.__uuid) Object.defineProperty(this, '__uuid', {
-                value: config.generators.requestID(),
-                writable: false
-            })
+            if (!this.__uuid) {
+                Object.defineProperty(this, '__uuid', {
+                    value: config.generators.requestID(),
+                    writable: false
+                })
+            }
             return <string>this.__uuid;
         }
     })
 
     // Wrap common verb methods with async support
-    const methodNames: (keyof ExpressoApplication)[] = ['all', 'use', 'get', 'post', 'patch', 'delete', 'put', 'options', 'head']
+    const methodNames: (keyof ExpressoApplication)[] = ['all', 'get', 'post', 'patch', 'delete', 'put', 'options', 'head']
     for (const methodName of methodNames) {
         const _oldFn = app[<keyof Express>methodName];
         Object.defineProperty(app, methodName, {
@@ -139,18 +148,22 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     // wrap send
     const _send = app.response.send;
     Object.defineProperty(app.response, 'send', {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value: function <ResBody>(this: ExpressoRequest, data?: ResBody & any) {
-            if (typeof data === 'object') {
-                if (data && 'a' in data && Array.isArray(data['a'])) {
-                    _send.call(this, renderXML(data))
-                    return
-                } else if (data && 'props' in data && 'type' in data && typeof data['type'] === 'function') {
-                    _send.call(this, renderJSX(data));
-                    return
-                }
+        value: function <ResBody>(this: ExpressoRequest, data?: ResBody | VNode) {
+            if (typeof data === 'object' && 'props' in data &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                'type' in data && typeof (data as any)['type'] !== 'undefined') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                _send.call(this, renderJSX(data as any));
+                return
             }
             _send.call(this, data);
+        }
+    })
+
+    // define .xml
+    Object.defineProperty(app.response, 'xml', {
+        value: function (this: ExpressoRequest, dom: JSXNode) {
+            _send.call(this, renderXML(dom))
         }
     })
 
