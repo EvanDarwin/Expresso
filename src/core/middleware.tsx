@@ -88,6 +88,7 @@ export interface Middleware {
     /** Bind either the default error page, or define your own custom renderer. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error(fn?: (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any):
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any;
 
     /** Bind a directory to the /static path in Express */
@@ -125,7 +126,8 @@ export const Middleware: Middleware = {
     error: (fn?) => {
         if (typeof fn === 'function') return fn
         // the fourth parameter is required for express to detect it as an error handler
-        return function expressoError(err: Error, req: express.Request, res: express.Response, next: NextFunction) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        return function expressoError(err: Error, req: express.Request, res: express.Response, _next: NextFunction) {
             if (!res.statusCode || res.statusCode === 200) res.status(500)
             res.send(renderJSX(<InternalErrorPage req={req as ExpressoRequest} error={err}/>));
         }

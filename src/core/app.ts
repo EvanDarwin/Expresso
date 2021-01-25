@@ -148,10 +148,11 @@ function bindExpressApplication<E, EK>(opts: ExpressoOptions<E>, config: Express
     // wrap send
     const _send = app.response.send;
     Object.defineProperty(app.response, 'send', {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         value: function <ResBody>(this: ExpressoRequest, data?: ResBody | VNode) {
             if (typeof data === 'object' && 'props' in data &&
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 'type' in data && typeof (data as any)['type'] !== 'undefined') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 _send.call(this, renderJSX(data as any));
                 return
             }
