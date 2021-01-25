@@ -108,6 +108,17 @@ declare namespace Express {
         xml(this: ExpressoRequest, dom: JSXNode): void;
     }
 
+    export type ErrorRequestHandler<P = ParamsDictionary,
+        ResBody = any,
+        ReqBody = any,
+        ReqQuery = ParsedQs,
+        Locals extends Record<string, any> = Record<string, any>> = (
+        err: Error | any,
+        req: ExpressoRequest<P, ResBody, ReqBody, ReqQuery, Locals>,
+        res: ExpressoResponse<ResBody, Locals>,
+        next: NextFunction,
+    ) => void;
+
     export interface RequestHandler<P = ParamsDictionary,
         ResBody = any,
         ReqBody = any,
@@ -164,3 +175,9 @@ export interface Route {
     stack: Layer[];
     methods: { [K in 'get' | 'post' | 'patch' | 'put' | 'delete' | 'head']: boolean },
 }
+
+export type ErrorRequestHandler<P = ParamsDictionary,
+    ResBody = any,
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    Locals extends Record<string, any> = Record<string, any>> = Express.ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>;
