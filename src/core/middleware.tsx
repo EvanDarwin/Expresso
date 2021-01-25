@@ -87,9 +87,7 @@ export interface Middleware {
 
     /** Bind either the default error page, or define your own custom renderer. */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error(fn?: ErrorRequestHandler):
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (err: Error, req: ExpressoRequest, res: ExpressoResponse, next: NextFunction) => any;
+    error(fn?: ErrorRequestHandler): ErrorRequestHandler;
 
     /** Bind a directory to the /static path in Express */
     static(path: string, opts?: ServeStaticOptions): RequestHandler

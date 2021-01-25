@@ -69,7 +69,8 @@ declare namespace Express {
         ReqQuery = ParsedQs,
         Locals extends Record<string, any> = Record<string, any>> =
         | Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
-        | Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>;
+        | Express.ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>
+        | Array<Express.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals> | Express.ErrorRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals>>;
 
     export interface Application extends core.Application {
         (req: ExpressoRequest | http.IncomingMessage, res: ExpressoResponse | http.ServerResponse): any;
@@ -141,6 +142,7 @@ export interface ExpressoApplication extends Express.Application {
     delete: ((name: string) => any) & Express.IRouterMatcher<this>;
     head: ((name: string) => any) & Express.IRouterMatcher<this>;
     all: ((name: string) => any) & Express.IRouterMatcher<this>;
+    use: Express.IRouterMatcher<this> & core.IRouterHandler<this> & ((...params: Express.RequestHandlerParams[]) => any)
 }
 
 export interface Expresso<CK = ConfigKeys> extends ExpressoApplication {
