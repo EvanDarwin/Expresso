@@ -67,8 +67,5 @@ export async function compileSass(log: Logger): Promise<void> {
     log.info(ansi.whiteBright(`Writing output to: ${ansi.yellowBright.underline(outputFilePath)}`));
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fs.writeFileSync(outputFilePath, compiledSassBody.css);
-    // TODO: remove debugging
-    console.dir(compiledSassBody.stats, {depth: null})
     log.info(ansi.greenBright(`Compiled successfully!`))
-
 }
