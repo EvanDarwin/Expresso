@@ -31,7 +31,7 @@ function help(): never {
         ...Object.entries({
             "db:test": "Test database connection details",
             "db:sync": "Synchronize database schema",
-            "sass:compile": "Compile SASS",
+            "compile:sass": "Compile SASS",
         }).map(([k, v]) => `  ${ansiColors.cyan(k.padEnd(15, ' '))}${ansiColors.whiteBright(v)}`),
         ''
     ].join('\n'))
@@ -53,7 +53,7 @@ switch (subcommand.toLowerCase()) {
     case "db:sync":
         // TODO: Sync DB
         break;
-    case "sass:compile":
+    case "compile:sass":
         compileSass(log)
             .then(() => process.exit(0))
             .catch(() => process.exit(1));
