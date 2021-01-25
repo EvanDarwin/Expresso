@@ -9,7 +9,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "test": "ts-mocha",
     "test:coverage": "nyc --reporter=text-summary --reporter=lcov --reporter=cobertura ts-mocha --reporter=mocha-junit-reporter",
-    "cli": "ts-node ./src/bin/index.ts",
+    "cli": "node ./dist/bin",
     "typeorm": "ts-node node_modules/typeorm/cli.js"
   },
   "bin": {

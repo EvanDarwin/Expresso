@@ -13,14 +13,17 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sass from "sass";
 import {Logger} from "tslog";
-import {connect} from "../core";
+import {Connection} from "typeorm";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires,security/detect-non-literal-require
+const {connect} = require(path.resolve(__dirname, "../core/index.js"));
 
 export async function testConnections(log: Logger): Promise<void> {
     log.info(ansi.whiteBright("Initiating ORM connection..."))
-    return await connect().then(async DB => {
+    return await connect().then(async (DB: Connection) => {
         log.info(ansi.greenBright(`Connected to ${ansi.underline.yellowBright(DB.options.type)}!`))
         await DB.close();
-    }).catch(e => {
+    }).catch((e: unknown) => {
         log.fatal(ansi.redBright(`Failed to connect to the database. Please check your ${
             ansi.underline.yellowBright('ormconfig.json')}.`))
         return Promise.reject(e)

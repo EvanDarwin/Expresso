@@ -13,7 +13,9 @@
 import * as ansiColors from "ansi-colors";
 import * as minimist from "minimist";
 import {Logger} from "tslog";
-import {compileSass, testConnections} from "./lib";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires,security/detect-non-literal-require
+const {compileSass, testConnections} = require(__dirname + "/lib");
 
 const argv = minimist(process.argv.slice(2))
 const [subcommand] = argv._
