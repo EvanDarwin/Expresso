@@ -69,6 +69,15 @@ export interface Middleware {
     helmet: typeof helmetBase;
 
     /**
+     * The functionality of the popular 'connect-rid' middleware,
+     * but powered by Expresso's `req.uuid`
+     * @see connect-rid
+     * @param {string} headerName
+     * @returns {e.RequestHandler}
+     */
+    rid(headerName?: string): RequestHandler;
+
+    /**
      * Bind either the default 404 page, or define your own custom renderer.
      * This middleware must be defined **AFTER** all other routes, or you will
      * encounter unwanted 404 errors.
@@ -90,6 +99,13 @@ export const Middleware: Middleware = {
     parsers: {json: jsonMiddleware, raw, urlencoded},
 
     helmet: helmetBase,
+
+    rid(headerName = 'X-RID'): RequestHandler {
+        return function rid(req: express.Request, res: express.Response, next: NextFunction) {
+            (res as ExpressoResponse).setHeader(headerName, (req as ExpressoRequest).uuid)
+            next()
+        }
+    },
 
     notFound: (fn?): RequestHandler => {
         // noinspection UnnecessaryLocalVariableJS

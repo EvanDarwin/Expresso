@@ -36,6 +36,7 @@ export type ExpressoEnv<CK> = <T>(key: CK | string, defaultValue?: T) => T;
 
 export interface ExpressoOptions<E = ConfigSetDataSimple> {
     env?: E;
-    trustProxy?: string | number;
+    debug?: boolean;
+    trustProxy?: string|string[] | number | ((ip: string) => boolean);
     getRequestID?: () => Promise<string> | string;
 }
